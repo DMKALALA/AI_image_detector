@@ -1,0 +1,171 @@
+{% extends 'detector/base.html' %}
+{% load detector_extras %}
+
+{% block title %}AI Detection Results - AI Image Detector{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'detector:home' %}">Home</a></li>
+                        <li class="breadcrumb-item active">Results</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Image Display -->
+            <div class="col-lg-6 mb-4">
+                <div class="card result-card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-image"></i> Uploaded Image</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <img src="{{ image_upload.image.url }}" class="img-fluid w-100" alt="Uploaded image">
+                        <div class="p-3">
+                            <h5>{{ image_upload.filename }}</h5>
+                            <p class="text-muted small mb-0">
+                                Uploaded: {{ image_upload.uploaded_at|date:"M d, Y H:i" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Detection Results -->
+            <div class="col-lg-6 mb-4">
+                <div class="card result-card">
+                    <div class="card-header {% if image_upload.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-{% if image_upload.is_ai_generated %}robot{% else %}user{% endif %}"></i> 
+                            AI Detection Results
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Main Result -->
+                        <div class="text-center mb-4">
+                            <div class="display-6 mb-3">
+                                {% if image_upload.is_ai_generated %}
+                                    <i class="fas fa-robot text-danger"></i>
+                                    <span class="text-danger fw-bold">AI-Generated</span>
+                                {% else %}
+                                    <i class="fas fa-user text-success"></i>
+                                    <span class="text-success fw-bold">Real/Human-Created</span>
+                                {% endif %}
+                            </div>
+                            <div class="h4 mb-3">
+                                Confidence: <span class="badge bg-{% if image_upload.confidence_score > 0.7 %}success{% elif image_upload.confidence_score > 0.4 %}warning{% else %}danger{% endif %} fs-6">{{ image_upload.confidence_percentage }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Confidence Bar -->
+                        <div class="mb-4">
+                            <h6>Confidence Level:</h6>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: {{ image_upload.confidence_score|floatformat:0 }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Detection Indicators -->
+                        {% if image_upload.detection_indicators %}
+                            <div class="mb-4">
+                                <h6>Detection Indicators:</h6>
+                                <ul class="list-group list-group-flush">
+                                    {% for indicator in image_upload.detection_indicators %}
+                                        <li class="list-group-item d-flex align-items-center">
+                                            <i class="fas fa-chevron-right text-muted me-2"></i>
+                                            <small>{{ indicator }}</small>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- AI Caption -->
+                        {% if image_upload.ai_caption %}
+                            <div class="mb-4">
+                                <h6>AI Analysis:</h6>
+                                <div class="alert alert-light">
+                                    <i class="fas fa-quote-left text-muted"></i>
+                                    <em>{{ image_upload.ai_caption }}</em>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Result Summary -->
+                        <div class="alert {% if image_upload.is_ai_generated %}alert-danger{% else %}alert-success{% endif %}">
+                            <i class="fas fa-{% if image_upload.is_ai_generated %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+                            <strong>
+                                {% if image_upload.is_ai_generated %}
+                                    This image appears to be AI-generated!
+                                {% else %}
+                                    This image appears to be real/human-created!
+                                {% endif %}
+                            </strong>
+                            <br>
+                            <small>Confidence: {{ image_upload.confidence_percentage }}</small>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <a href="{% url 'detector:home' %}" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Upload Another Image
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Technical Details -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card result-card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-cogs"></i> Technical Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Model Information:</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Model:</strong> BLIP (Bootstrapping Language-Image Pre-training)</li>
+                                    <li><strong>Type:</strong> AI Image Detection & Analysis</li>
+                                    <li><strong>Framework:</strong> Transformers (Hugging Face)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Processing Details:</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Upload Time:</strong> {{ image_upload.uploaded_at|date:"M d, Y H:i:s" }}</li>
+                                    <li><strong>File Name:</strong> {{ image_upload.filename }}</li>
+                                    <li><strong>Detection Result:</strong> {{ image_upload.detection_status }}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add some animation to confidence bars
+    document.addEventListener('DOMContentLoaded', function() {
+        const confidenceBars = document.querySelectorAll('.confidence-fill');
+        confidenceBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 500);
+        });
+    });
+</script>
+{% endblock %}
