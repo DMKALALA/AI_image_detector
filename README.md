@@ -1,15 +1,16 @@
 # AI Image Detector
 
-A Django web application that uses artificial intelligence to detect and identify objects in uploaded images. Built with Django, PyTorch, and the BLIP (Bootstrapping Language-Image Pre-training) model from Hugging Face Transformers.
+A Django web application that uses artificial intelligence to detect whether images are AI-generated or real/human-created. Built with Django, PyTorch, and the BLIP (Bootstrapping Language-Image Pre-training) model from Hugging Face Transformers.
 
 ## Features
 
 - 🖼️ **Image Upload**: Upload images in various formats (JPG, PNG, GIF, WebP)
-- 🤖 **AI Detection**: Automatic object detection using state-of-the-art machine learning models
+- 🤖 **AI Detection**: Automatic detection of AI-generated vs real images using state-of-the-art machine learning models
 - 📊 **Confidence Scores**: See how confident the AI is about each detection
 - 📱 **Responsive Design**: Modern, mobile-friendly interface
 - 🔄 **Recent Uploads**: View your recent image analyses
 - 🎯 **Real-time Processing**: Fast AI-powered analysis
+- 🔍 **Detailed Analysis**: Multiple detection methods with specific indicators
 
 ## Technology Stack
 
@@ -18,13 +19,14 @@ A Django web application that uses artificial intelligence to detect and identif
 - **Model**: BLIP (Salesforce/blip-image-captioning-base)
 - **Frontend**: Bootstrap 5, HTML5, CSS3, JavaScript
 - **Database**: SQLite (development)
-- **Image Processing**: Pillow (PIL)
+- **Image Processing**: Pillow (PIL), NumPy
 
 ## Installation
 
-1. **Clone or navigate to the project directory**:
+1. **Clone the repository**:
    ```bash
-   cd /path/to/ai_image_detector
+   git clone https://github.com/DMKALALA/AI_image_detector.git
+   cd AI_image_detector
    ```
 
 2. **Install dependencies**:
@@ -55,9 +57,9 @@ A Django web application that uses artificial intelligence to detect and identif
    - Click on the upload area or drag and drop an image
    - Supported formats: JPG, PNG, GIF, WebP
 
-2. **View Results**:
-   - The AI will analyze your image and detect objects
-   - See detected objects with confidence scores
+2. **View AI Detection Results**:
+   - The AI will analyze your image and determine if it's AI-generated or real
+   - See confidence scores and detailed indicators
    - View technical details about the analysis
 
 3. **Admin Interface**:
@@ -73,11 +75,28 @@ A Django web application that uses artificial intelligence to detect and identif
 
 ## How It Works
 
-1. **Image Upload**: Users upload images through a web interface
-2. **AI Processing**: The BLIP model analyzes the image and generates captions
-3. **Object Extraction**: The system extracts potential objects from AI-generated descriptions
-4. **Confidence Scoring**: Each detection gets a confidence score based on common object patterns
-5. **Results Display**: Users see detected objects with visual confidence indicators
+The AI detection system uses multiple analysis methods:
+
+1. **Image Characteristics Analysis**: 
+   - Checks for perfect symmetry (common in AI art)
+   - Analyzes unusual color patterns
+   - Detects overly perfect details
+   - Identifies common AI generation artifacts
+
+2. **AI Model Analysis**: 
+   - Uses BLIP model to generate image captions
+   - Analyzes content for AI-related keywords
+   - Provides contextual understanding
+
+3. **Metadata Analysis**: 
+   - Examines file metadata for AI software signatures
+   - Checks file size and format characteristics
+   - Looks for generation tool indicators
+
+4. **Combined Scoring**: 
+   - Weights different analysis methods
+   - Provides confidence scores
+   - Returns specific detection indicators
 
 ## Model Information
 
@@ -90,7 +109,7 @@ The application uses the **BLIP (Bootstrapping Language-Image Pre-training)** mo
 ## File Structure
 
 ```
-ai_image_detector/
+AI_image_detector/
 ├── detector/                 # Main Django app
 │   ├── models.py            # Database models
 │   ├── views.py             # View functions
@@ -115,8 +134,8 @@ ai_image_detector/
 
 ## Customization
 
-### Adding New Object Types
-Edit `detector/ai_service.py` and modify the `common_objects` list to include new object types you want to detect.
+### Modifying Detection Methods
+Edit `detector/ai_service.py` to adjust detection algorithms and thresholds.
 
 ### Changing the AI Model
 Replace the model in `detector/ai_service.py`:
@@ -164,11 +183,11 @@ Modify the CSS in `detector/templates/detector/base.html` to customize the appea
 
 - [ ] User authentication and profiles
 - [ ] Batch image processing
-- [ ] More sophisticated object detection models
-- [ ] Image classification and tagging
+- [ ] More sophisticated AI detection models
+- [ ] Real-time image processing with WebSockets
 - [ ] API rate limiting
 - [ ] Cloud storage integration
-- [ ] Real-time image processing with WebSockets
+- [ ] Advanced artifact detection
 
 ## License
 
