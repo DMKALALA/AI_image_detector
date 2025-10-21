@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from .models import ImageUpload
 from .forms import ImageUploadForm
-from .ai_service import detection_service
+from .trained_ai_service import detection_service
 import os
 
 def home(request):
