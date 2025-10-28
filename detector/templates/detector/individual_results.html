@@ -1,0 +1,343 @@
+{% extends 'detector/base.html' %}
+{% load detector_extras %}
+
+{% block title %}Individual Results - AI Image Detector{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'detector:home' %}">Home</a></li>
+                        <li class="breadcrumb-item active">Individual Results</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="mb-0">
+                        <i class="fas fa-images"></i> Individual Results
+                    </h1>
+                    <div class="text-muted">
+                        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_images }} images
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card bg-primary text-white text-center">
+                    <div class="card-body">
+                        <h4>{{ total_images }}</h4>
+                        <small>Total Images</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-success text-white text-center">
+                    <div class="card-body">
+                        <h4>{{ real_images }}</h4>
+                        <small>Real Images</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-danger text-white text-center">
+                    <div class="card-body">
+                        <h4>{{ ai_images }}</h4>
+                        <small>AI Images</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-info text-white text-center">
+                    <div class="card-body">
+                        <h4>{{ high_confidence }}</h4>
+                        <small>High Confidence</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-warning text-white text-center">
+                    <div class="card-body">
+                        <h4>{{ low_confidence }}</h4>
+                        <small>Low Confidence</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-secondary text-white text-center">
+                    <div class="card-body">
+                        <h4>{{ feedback_rate|floatformat:1 }}%</h4>
+                        <small>Feedback Rate</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters and Search -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <form method="get" class="d-flex gap-2">
+                    <div class="flex-grow-1">
+                        <input type="text" name="search" class="form-control" placeholder="Search by filename, method, or indicators..." value="{{ search_query }}">
+                    </div>
+                    <select name="filter" class="form-select" style="width: auto;">
+                        <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Images</option>
+                        <option value="real" {% if filter_type == 'real' %}selected{% endif %}>Real Images</option>
+                        <option value="ai" {% if filter_type == 'ai' %}selected{% endif %}>AI Images</option>
+                        <option value="high_confidence" {% if filter_type == 'high_confidence' %}selected{% endif %}>High Confidence</option>
+                        <option value="low_confidence" {% if filter_type == 'low_confidence' %}selected{% endif %}>Low Confidence</option>
+                    </select>
+                    <select name="sort" class="form-select" style="width: auto;">
+                        <option value="-uploaded_at" {% if sort_by == '-uploaded_at' %}selected{% endif %}>Newest First</option>
+                        <option value="uploaded_at" {% if sort_by == 'uploaded_at' %}selected{% endif %}>Oldest First</option>
+                        <option value="-confidence_score" {% if sort_by == '-confidence_score' %}selected{% endif %}>Highest Confidence</option>
+                        <option value="confidence_score" {% if sort_by == 'confidence_score' %}selected{% endif %}>Lowest Confidence</option>
+                        <option value="filename" {% if sort_by == 'filename' %}selected{% endif %}>Filename A-Z</option>
+                        <option value="-filename" {% if sort_by == '-filename' %}selected{% endif %}>Filename Z-A</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'detector:analytics_dashboard' %}" class="btn btn-outline-info me-2">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+                <a href="{% url 'detector:batch_upload' %}" class="btn btn-outline-success">
+                    <i class="fas fa-upload"></i> Batch Upload
+                </a>
+            </div>
+        </div>
+        
+        <!-- Results Grid -->
+        <div class="row">
+            {% for upload in page_obj %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 result-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 text-truncate" title="{{ upload.filename }}">
+                            {{ upload.filename|truncatechars:25 }}
+                        </h6>
+                        <span class="badge {% if upload.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}">
+                            {% if upload.is_ai_generated %}AI{% else %}Real{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Image Preview -->
+                        <div class="text-center mb-3">
+                            <img src="{{ upload.image.url }}" alt="{{ upload.filename }}" 
+                                 class="img-fluid rounded" style="max-height: 200px; object-fit: cover;">
+                        </div>
+                        
+                        <!-- Detection Results -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Confidence:</strong>
+                                <span class="badge {% if upload.confidence_score >= 0.8 %}bg-success{% elif upload.confidence_score >= 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ upload.confidence_percentage }}
+                                </span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {% if upload.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}" 
+                                     style="width: {% widthratio upload.confidence_score 1 100 %}%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Method -->
+                        <div class="mb-2">
+                            <strong>Method:</strong> 
+                            <span class="badge bg-info">{{ upload.method|title }}</span>
+                        </div>
+                        
+                        <!-- Upload Date -->
+                        <div class="mb-2">
+                            <strong>Uploaded:</strong> 
+                            <small class="text-muted">{{ upload.uploaded_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        
+                        <!-- Indicators -->
+                        {% if upload.detection_indicators %}
+                        <div class="mb-2">
+                            <strong>Indicators:</strong>
+                            <div class="mt-1">
+                                {% for indicator in upload.detection_indicators|slice:":3" %}
+                                <small class="badge bg-light text-dark me-1">{{ indicator }}</small>
+                                {% endfor %}
+                                {% if upload.detection_indicators|length > 3 %}
+                                <small class="text-muted">+{{ upload.detection_indicators|length|add:"-3" }} more</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- User Feedback -->
+                        {% if upload.user_feedback %}
+                        <div class="mb-2">
+                            <strong>Feedback:</strong>
+                            <span class="badge {% if upload.user_feedback == 'correct' %}bg-success{% elif upload.user_feedback == 'incorrect' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ upload.get_feedback_status }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'detector:result' upload.pk %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                            {% if not upload.user_feedback %}
+                            <button class="btn btn-sm btn-outline-secondary" onclick="showFeedbackModal({{ upload.pk }})">
+                                <i class="fas fa-thumbs-up"></i> Feedback
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No images found</h4>
+                    <p class="text-muted">Try adjusting your filters or upload some images first.</p>
+                    <a href="{% url 'detector:home' %}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload Images
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="Individual results pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}{% if sort_by != '-uploaded_at' %}&sort={{ sort_by }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}{% if sort_by != '-uploaded_at' %}&sort={{ sort_by }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}{% if sort_by != '-uploaded_at' %}&sort={{ sort_by }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}{% if sort_by != '-uploaded_at' %}&sort={{ sort_by }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Feedback Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Provide Feedback</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Was this detection result correct?</p>
+                <div class="mb-3">
+                    <button class="btn btn-success me-2" onclick="submitQuickFeedback('correct')">
+                        <i class="fas fa-check"></i> Correct
+                    </button>
+                    <button class="btn btn-danger me-2" onclick="submitQuickFeedback('incorrect')">
+                        <i class="fas fa-times"></i> Incorrect
+                    </button>
+                    <button class="btn btn-warning" onclick="submitQuickFeedback('unsure')">
+                        <i class="fas fa-question"></i> Unsure
+                    </button>
+                </div>
+                <div id="feedbackStatus" class="alert" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentImageId = null;
+
+function showFeedbackModal(imageId) {
+    currentImageId = imageId;
+    const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+    modal.show();
+}
+
+function submitQuickFeedback(feedback) {
+    if (!currentImageId) return;
+    
+    const statusDiv = document.getElementById('feedbackStatus');
+    statusDiv.style.display = 'block';
+    statusDiv.className = 'alert alert-info';
+    statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting feedback...';
+    
+    fetch(`/feedback/${currentImageId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+        },
+        body: JSON.stringify({
+            feedback: feedback,
+            notes: ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.className = 'alert alert-success';
+            statusDiv.innerHTML = '<i class="fas fa-check"></i> ' + data.message;
+            
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
+                modal.hide();
+                // Reload page to show updated feedback
+                location.reload();
+            }, 2000);
+        } else {
+            statusDiv.className = 'alert alert-danger';
+            statusDiv.innerHTML = '<i class="fas fa-times"></i> Error: ' + data.error;
+        }
+    })
+    .catch(error => {
+        statusDiv.className = 'alert alert-danger';
+        statusDiv.innerHTML = '<i class="fas fa-times"></i> Error submitting feedback: ' + error.message;
+    });
+}
+</script>
+{% endblock %}

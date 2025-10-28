@@ -1,0 +1,149 @@
+{% extends 'detector/base.html' %}
+{% load detector_extras %}
+
+{% block title %}Batch Results - AI Image Detector{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'detector:home' %}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'detector:batch_upload' %}">Batch Upload</a></li>
+                        <li class="breadcrumb-item active">Results</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="fas fa-list"></i> Recent Batch Results</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_uploads %}
+                            <div class="row">
+                                {% for upload in recent_uploads %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card result-card">
+                                        <div class="card-header {% if upload.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white">
+                                            <h6 class="mb-0">{{ upload.filename }}</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="text-center mb-2">
+                                                <img src="{{ upload.image.url }}" class="img-fluid" style="max-height: 150px; object-fit: cover;" alt="{{ upload.filename }}">
+                                            </div>
+                                            
+                                            <div class="mb-2">
+                                                <strong>Result:</strong> 
+                                                <span class="badge {% if upload.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}">
+                                                    {% if upload.is_ai_generated %}AI-Generated{% else %}Real{% endif %}
+                                                </span>
+                                            </div>
+                                            
+                                            <div class="mb-2">
+                                                <strong>Confidence:</strong> {{ upload.confidence_percentage }}
+                                                <div class="progress mt-1" style="height: 8px;">
+                                                    <div class="progress-bar {% if upload.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}" 
+                                                         style="width: {% widthratio upload.confidence_score 1 100 %}%"></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-2">
+                                                <strong>Method:</strong> {{ upload.method|title }}
+                                            </div>
+                                            
+                                            <div class="mb-2">
+                                                <strong>Feedback:</strong> {{ upload.get_feedback_status }}
+                                            </div>
+                                            
+                                            <div class="text-center">
+                                                <a href="{% url 'detector:result' upload.pk %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> View Details
+                                                </a>
+                                            </div>
+                                            
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    {{ upload.uploaded_at|date:"M d, Y H:i" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No images uploaded yet</h5>
+                                <p class="text-muted">Upload some images to see batch results here.</p>
+                                <a href="{% url 'detector:batch_upload' %}" class="btn btn-primary">
+                                    <i class="fas fa-upload"></i> Start Batch Upload
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        {% if recent_uploads %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Batch Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h4 class="text-primary">{{ recent_uploads|length }}</h4>
+                                    <p class="mb-0">Total Images</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h4 class="text-success">
+                                        {% for upload in recent_uploads %}
+                                            {% if not upload.is_ai_generated %}{{ forloop.counter0|add:1 }}{% endif %}
+                                        {% endfor %}
+                                    </h4>
+                                    <p class="mb-0">Real Images</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h4 class="text-danger">
+                                        {% for upload in recent_uploads %}
+                                            {% if upload.is_ai_generated %}{{ forloop.counter0|add:1 }}{% endif %}
+                                        {% endfor %}
+                                    </h4>
+                                    <p class="mb-0">AI Images</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h4 class="text-warning">
+                                        {% for upload in recent_uploads %}
+                                            {% if upload.user_feedback %}{{ forloop.counter0|add:1 }}{% endif %}
+                                        {% endfor %}
+                                    </h4>
+                                    <p class="mb-0">With Feedback</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

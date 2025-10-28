@@ -23,6 +23,46 @@
             border-color: #667eea;
             background-color: #f8f9fa;
         }
+        .upload-area.dragover {
+            border-color: #28a745;
+            background-color: #d4edda;
+            transform: scale(1.02);
+        }
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .file-input-overlay {
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .preview-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #dee2e6;
+        }
+        .preview-image {
+            flex-shrink: 0;
+        }
+        .preview-image img {
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .preview-info {
+            flex-grow: 1;
+        }
         .result-card {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
@@ -48,6 +88,45 @@
             <a class="navbar-brand" href="{% url 'detector:home' %}">
                 <i class="fas fa-eye"></i> AI Image Detector
             </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'detector:home' %}">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'detector:batch_upload' %}">
+                                <i class="fas fa-images"></i> Batch Upload
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'detector:individual_results' %}">
+                                <i class="fas fa-list"></i> Individual Results
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'detector:analytics_dashboard' %}">
+                                <i class="fas fa-chart-line"></i> Analytics
+                            </a>
+                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'detector:api_docs' %}">
+                            <i class="fas fa-code"></i> API Docs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'detector:feedback_stats' %}">
+                            <i class="fas fa-chart-bar"></i> Feedback Stats
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 

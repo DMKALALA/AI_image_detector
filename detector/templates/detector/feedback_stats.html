@@ -1,0 +1,144 @@
+{% extends 'detector/base.html' %}
+
+{% block title %}Feedback Statistics - AI Image Detector{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'detector:home' %}">Home</a></li>
+                        <li class="breadcrumb-item active">Feedback Statistics</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="fas fa-chart-bar"></i> User Feedback Statistics</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Overview Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h4 class="text-primary">{{ total_images }}</h4>
+                                        <p class="mb-0">Total Images</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h4 class="text-info">{{ feedback_images }}</h4>
+                                        <p class="mb-0">With Feedback</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h4 class="text-success">{{ feedback_rate|floatformat:1 }}%</h4>
+                                        <p class="mb-0">Feedback Rate</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h4 class="text-warning">{{ accuracy|floatformat:1 }}%</h4>
+                                        <p class="mb-0">Detection Accuracy</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Feedback Breakdown -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0"><i class="fas fa-check"></i> Correct Detections</h5>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <h2 class="text-success">{{ correct_count }}</h2>
+                                        <p class="mb-0">Users confirmed correct</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-danger">
+                                    <div class="card-header bg-danger text-white">
+                                        <h5 class="mb-0"><i class="fas fa-times"></i> Incorrect Detections</h5>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <h2 class="text-danger">{{ incorrect_count }}</h2>
+                                        <p class="mb-0">Users reported incorrect</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-warning">
+                                    <div class="card-header bg-warning text-white">
+                                        <h5 class="mb-0"><i class="fas fa-question"></i> Unsure</h5>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <h2 class="text-warning">{{ unsure_count }}</h2>
+                                        <p class="mb-0">Users were unsure</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        {% if total_feedback > 0 %}
+                        <div class="mt-4">
+                            <h5>Feedback Distribution</h5>
+                            <div class="progress mb-2" style="height: 30px;">
+                                <div class="progress-bar bg-success" style="width: {% widthratio correct_count total_feedback 100 %}%">
+                                    {{ correct_count }} Correct
+                                </div>
+                                <div class="progress-bar bg-danger" style="width: {% widthratio incorrect_count total_feedback 100 %}%">
+                                    {{ incorrect_count }} Incorrect
+                                </div>
+                                <div class="progress-bar bg-warning" style="width: {% widthratio unsure_count total_feedback 100 %}%">
+                                    {{ unsure_count }} Unsure
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Actions -->
+                        <div class="mt-4 text-center">
+                            <a href="{% url 'detector:home' %}" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Upload More Images
+                            </a>
+                            <button class="btn btn-secondary" onclick="location.reload()">
+                                <i class="fas fa-sync"></i> Refresh Statistics
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}

@@ -1,44 +1,25 @@
-# Django
-*.log
-*.pot
-*.pyc
-__pycache__/
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-media/
-staticfiles/
-
 # Python
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+dist/
+build/
 
-# Virtual environments
-.env
-.venv
-env/
+# Virtual Environment
+.venv/
 venv/
 ENV/
-env.bak/
-venv.bak/
+env/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
 
 # IDE
 .vscode/
@@ -49,26 +30,30 @@ venv.bak/
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# PyTorch model cache
-.cache/
-transformers_cache/
+# Model files (large, should be downloaded separately)
+*.pth
+*.h5
+*.ckpt
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Training outputs
+training_plots/
+training_results.json
+genimage_training_plots/
+genimage_*.json
+genimage_*.png
+*_training_plots/
+*_results.json
+*_training_results.json
 
-# pytest
-.pytest_cache/
-.coverage
-htmlcov/
+# Test data
+genimage_data/
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# Config files with sensitive data (keep structure, ignore actual configs if needed)
+# adaptive_learning_config.json
+# method_weights_config.json
+
+# Temporary files
+*.tmp
+*.bak

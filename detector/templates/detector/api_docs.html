@@ -1,0 +1,261 @@
+{% extends 'detector/base.html' %}
+
+{% block title %}API Documentation - AI Image Detector{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'detector:home' %}">Home</a></li>
+                        <li class="breadcrumb-item active">API Documentation</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="fas fa-code"></i> AI Image Detector API</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">RESTful API endpoints for AI image detection with real-time processing capabilities.</p>
+                        
+                        <!-- Status Endpoint -->
+                        <div class="mb-4">
+                            <h5><code>GET /api/status/</code></h5>
+                            <p>Check API status and system information.</p>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Response:</h6>
+                                    <pre><code>{
+  "status": "operational",
+  "trained_model_available": true,
+  "device": "cpu",
+  "timestamp": "2025-01-21T14:30:00Z"
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Real-time Detection -->
+                        <div class="mb-4">
+                            <h5><code>POST /api/detect/realtime/</code></h5>
+                            <p>Real-time single image detection.</p>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Request:</h6>
+                                    <pre><code>Content-Type: multipart/form-data
+Body: image file</code></pre>
+                                    
+                                    <h6>Response:</h6>
+                                    <pre><code>{
+  "success": true,
+  "is_ai_generated": false,
+  "confidence": 0.85,
+  "method": "trained_model",
+  "indicators": ["High confidence prediction", "Trained model suggests real image"],
+  "analysis_details": {
+    "method": "trained_model",
+    "confidence": 0.85,
+    "indicators": ["High confidence prediction", "Trained model suggests real image"]
+  }
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Batch Detection -->
+                        <div class="mb-4">
+                            <h5><code>POST /api/detect/batch/</code></h5>
+                            <p>Batch image detection (up to 10 images).</p>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Request:</h6>
+                                    <pre><code>Content-Type: multipart/form-data
+Body: multiple image files (images[])</code></pre>
+                                    
+                                    <h6>Response:</h6>
+                                    <pre><code>{
+  "success": true,
+  "results": [
+    {
+      "filename": "image1.jpg",
+      "success": true,
+      "is_ai_generated": false,
+      "confidence": 0.85,
+      "method": "trained_model",
+      "indicators": ["High confidence prediction"]
+    },
+    {
+      "filename": "image2.jpg",
+      "success": true,
+      "is_ai_generated": true,
+      "confidence": 0.92,
+      "method": "trained_model",
+      "indicators": ["High confidence prediction"]
+    }
+  ],
+  "total_processed": 2
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Statistics -->
+                        <div class="mb-4">
+                            <h5><code>GET /api/stats/</code></h5>
+                            <p>Get system statistics and performance metrics.</p>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Response:</h6>
+                                    <pre><code>{
+  "total_images": 150,
+  "ai_images": 45,
+  "real_images": 105,
+  "total_feedback": 120,
+  "correct_feedback": 95,
+  "incorrect_feedback": 25,
+  "accuracy": 79.2,
+  "avg_confidence": 0.78,
+  "feedback_rate": 80.0
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Error Handling -->
+                        <div class="mb-4">
+                            <h5>Error Handling</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Common Error Responses:</h6>
+                                    <pre><code>// Invalid image
+{
+  "error": "Invalid image file"
+}
+
+// No image provided
+{
+  "error": "No image provided"
+}
+
+// Server error
+{
+  "success": false,
+  "error": "Detection failed: ..."
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Usage Examples -->
+                        <div class="mb-4">
+                            <h5>Usage Examples</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Python (requests)</h6>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <pre><code>import requests
+
+# Single image detection
+with open('image.jpg', 'rb') as f:
+    response = requests.post(
+        'http://localhost:8000/api/detect/realtime/',
+        files={'image': f}
+    )
+    result = response.json()
+    print(f"AI Generated: {result['is_ai_generated']}")
+    print(f"Confidence: {result['confidence']:.2f}")</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6>JavaScript (fetch)</h6>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <pre><code>// Single image detection
+const formData = new FormData();
+formData.append('image', fileInput.files[0]);
+
+fetch('/api/detect/realtime/', {
+    method: 'POST',
+    body: formData
+})
+.then(response => response.json())
+.then(data => {
+    console.log('AI Generated:', data.is_ai_generated);
+    console.log('Confidence:', data.confidence);
+});</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Rate Limits -->
+                        <div class="mb-4">
+                            <h5>Rate Limits & Guidelines</h5>
+                            <div class="alert alert-info">
+                                <ul class="mb-0">
+                                    <li><strong>Batch Size:</strong> Maximum 10 images per batch request</li>
+                                    <li><strong>File Size:</strong> Recommended under 10MB per image</li>
+                                    <li><strong>Supported Formats:</strong> JPEG, PNG, WebP</li>
+                                    <li><strong>Rate Limit:</strong> 100 requests per minute per IP</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Test API -->
+                        <div class="text-center">
+                            <a href="{% url 'detector:home' %}" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Test API with Web Interface
+                            </a>
+                            <button class="btn btn-secondary" onclick="testAPI()">
+                                <i class="fas fa-play"></i> Test Status Endpoint
+                            </button>
+                        </div>
+                        
+                        <div id="apiTestResult" class="mt-3" style="display: none;">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>API Test Result:</h6>
+                                    <pre id="apiTestOutput"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function testAPI() {
+        const resultDiv = document.getElementById('apiTestResult');
+        const outputPre = document.getElementById('apiTestOutput');
+        
+        resultDiv.style.display = 'block';
+        outputPre.textContent = 'Testing API...';
+        
+        fetch('/api/status/')
+            .then(response => response.json())
+            .then(data => {
+                outputPre.textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                outputPre.textContent = 'Error: ' + error.message;
+            });
+    }
+</script>
+{% endblock %}

@@ -29,23 +29,49 @@
                         <h3 class="mb-0"><i class="fas fa-upload"></i> Upload Image</h3>
                     </div>
                     <div class="card-body">
-                        <form method="post" enctype="multipart/form-data">
+                        <form method="post" enctype="multipart/form-data" id="uploadForm">
                             {% csrf_token %}
-                            <div class="upload-area">
-                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
-                                <h4>Choose an image to analyze</h4>
-                                <p class="text-muted">Supported formats: JPG, PNG, GIF, WebP</p>
-                                {{ form.image }}
+                            <div class="upload-area" id="uploadArea">
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="imageInput" name="image" accept="image/*" style="display: none;">
+                                    <div class="file-input-overlay">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <h4 id="uploadText">Drag & Drop or Click to Upload</h4>
+                                        <p class="text-muted">Supported formats: JPG, PNG, GIF, WebP (Max 10MB)</p>
+                                        <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('imageInput').click()">
+                                            <i class="fas fa-folder-open"></i> Choose File
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- File Preview -->
+                                <div id="filePreview" class="preview-container" style="display: none;">
+                                    <div class="preview-image">
+                                        <img id="previewImg" src="" alt="Preview" class="img-fluid">
+                                    </div>
+                                    <div class="preview-info">
+                                        <h6 id="fileName"></h6>
+                                        <small id="fileSize" class="text-muted"></small>
+                                        <button type="button" class="btn btn-sm btn-danger mt-2" onclick="clearFile()">
+                                            <i class="fas fa-times"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                                
                                 {% if form.image.errors %}
                                     <div class="text-danger mt-2">
                                         {{ form.image.errors }}
                                     </div>
                                 {% endif %}
                             </div>
+                            
                             <div class="text-center mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg">
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
                                     <i class="fas fa-search"></i> Detect AI Image
                                 </button>
+                                <div id="loadingSpinner" class="spinner-border text-primary mt-3" role="status" style="display: none;">
+                                    <span class="visually-hidden">Analyzing...</span>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -130,4 +156,172 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Drag and drop functionality
+    const uploadArea = document.getElementById('uploadArea');
+    const imageInput = document.getElementById('imageInput');
+    const filePreview = document.getElementById('filePreview');
+    const previewImg = document.getElementById('previewImg');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const uploadText = document.getElementById('uploadText');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const uploadForm = document.getElementById('uploadForm');
+
+    // Drag and drop events
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+        uploadText.textContent = 'Drop your image here!';
+    });
+
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        uploadText.textContent = 'Drag & Drop or Click to Upload';
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        uploadText.textContent = 'Drag & Drop or Click to Upload';
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    // Click to upload
+    uploadArea.addEventListener('click', (e) => {
+        if (e.target === uploadArea || e.target.closest('.file-input-overlay')) {
+            imageInput.click();
+        }
+    });
+
+    // File input change
+    imageInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    // Handle file selection
+    function handleFile(file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file.');
+            return;
+        }
+
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB.');
+            return;
+        }
+
+        // Create a new FileList with the selected file
+        try {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            imageInput.files = dataTransfer.files;
+        } catch (error) {
+            // Fallback for older browsers
+            console.log('DataTransfer not supported, using alternative method');
+            // Create a temporary input element
+            const tempInput = document.createElement('input');
+            tempInput.type = 'file';
+            tempInput.files = [file];
+            imageInput.files = tempInput.files;
+        }
+        
+        // Debug log
+        console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
+        console.log('Input files length:', imageInput.files.length);
+
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            
+            // Hide upload overlay and show preview
+            document.querySelector('.file-input-overlay').style.display = 'none';
+            filePreview.style.display = 'flex';
+            
+            // Enable submit button
+            submitBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Clear file
+    function clearFile() {
+        imageInput.value = '';
+        previewImg.src = '';
+        fileName.textContent = '';
+        fileSize.textContent = '';
+        
+        // Show upload overlay and hide preview
+        document.querySelector('.file-input-overlay').style.display = 'block';
+        filePreview.style.display = 'none';
+        
+        // Disable submit button
+        submitBtn.disabled = true;
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Form submission
+    uploadForm.addEventListener('submit', (e) => {
+        // Check if file is selected
+        if (!imageInput.files || !imageInput.files.length) {
+            e.preventDefault();
+            alert('Please select an image to upload.');
+            return;
+        }
+
+        // Additional validation
+        const file = imageInput.files[0];
+        if (!file) {
+            e.preventDefault();
+            alert('Please select an image to upload.');
+            return;
+        }
+
+        // Validate file type again
+        if (!file.type.startsWith('image/')) {
+            e.preventDefault();
+            alert('Please select a valid image file.');
+            return;
+        }
+
+        // Validate file size again
+        if (file.size > 10 * 1024 * 1024) {
+            e.preventDefault();
+            alert('File size must be less than 10MB.');
+            return;
+        }
+
+        // Show loading spinner
+        submitBtn.disabled = true;
+        loadingSpinner.style.display = 'block';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+    });
+
+    // Initialize
+    submitBtn.disabled = true;
+</script>
 {% endblock %}

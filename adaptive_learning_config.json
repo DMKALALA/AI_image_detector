@@ -1,0 +1,7 @@
+{
+  "auto_update_enabled": true,
+  "update_interval_hours": 24,
+  "min_feedback_samples": 20,
+  "learning_rate": 0.1,
+  "last_update": "2025-10-28T16:00:46.198382+00:00"
+}

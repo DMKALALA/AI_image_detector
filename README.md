@@ -132,6 +132,10 @@ AI_image_detector/
 └── README.md               # This file
 ```
 
+## Documentation
+
+For comprehensive project documentation including architecture, performance analysis, training guides, and development history, see **`PROJECT_DOCUMENTATION.md`**.
+
 ## Customization
 
 ### Modifying Detection Methods

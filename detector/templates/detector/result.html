@@ -120,6 +120,244 @@
             </div>
         </div>
         
+        <!-- Three-Method Comparison Section -->
+        {% if image_upload.analysis_details and image_upload.analysis_details.method_comparison and image_upload.analysis_details.method_comparison.method_1 %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card result-card">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="mb-0"><i class="fas fa-balance-scale"></i> Three-Method Comparison Analysis</h4>
+                        <small class="text-white-50">Compare results from three different detection methodologies</small>
+                    </div>
+                    <div class="card-body">
+                        {% with comparison=image_upload.analysis_details.method_comparison %}
+                        
+                        <!-- Method Agreement Summary -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert {% if comparison.agreement.unanimous %}alert-success{% elif comparison.agreement.agreement_percentage > 66 %}alert-warning{% else %}alert-danger{% endif %}">
+                                    <h6><i class="fas fa-chart-line"></i> Method Agreement:</h6>
+                                    <p class="mb-1">
+                                        <strong>{{ comparison.agreement.ai_decisions }}</strong> method(s) detected AI-generated | 
+                                        <strong>{{ comparison.agreement.real_decisions }}</strong> method(s) detected Real
+                                    </p>
+                                    {% if comparison.agreement.unanimous %}
+                                        <p class="mb-0"><i class="fas fa-check-circle"></i> <strong>Unanimous agreement</strong> - All methods agree!</p>
+                                    {% else %}
+                                        <p class="mb-0"><i class="fas fa-info-circle"></i> <strong>{{ comparison.agreement.agreement_percentage|floatformat:0 }}% agreement</strong> - Methods have different opinions</p>
+                                    {% endif %}
+                                    <p class="mb-0 mt-2">
+                                        <strong>Best Method:</strong> 
+                                        {% if comparison.best_method == 'method_1' %}
+                                            <span class="badge bg-primary">{{ comparison.method_1.name }}</span>
+                                        {% elif comparison.best_method == 'method_2' %}
+                                            <span class="badge bg-primary">{{ comparison.method_2.name }}</span>
+                                        {% elif comparison.best_method == 'method_3' %}
+                                            <span class="badge bg-primary">{{ comparison.method_3.name }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Method 1: Deep Learning Model -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="card {% if comparison.best_method == 'method_1' %}border-primary border-2{% else %}border-secondary{% endif %}">
+                                    <div class="card-header {% if comparison.method_1.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1"><i class="fas fa-brain"></i> Method 1: Deep Learning Model</h5>
+                                                <small class="text-white-50">{{ comparison.method_1.description }}</small>
+                                            </div>
+                                            {% if comparison.best_method == 'method_1' %}
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-trophy"></i> Best Match</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 {% if comparison.method_1.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white rounded">
+                                                    <h3 class="mb-1">{% if comparison.method_1.is_ai_generated %}AI{% else %}Real{% endif %}</h3>
+                                                    <small>Detection</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h3 class="mb-1">{{ comparison.method_1.confidence|percentage|floatformat:0 }}%</h3>
+                                                    <small>Confidence</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Key Indicators:</h6>
+                                                <ul class="list-unstyled mb-0">
+                                                    {% for indicator in comparison.method_1.indicators|slice:":3" %}
+                                                    <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        {% if not comparison.method_1.available %}
+                                        <div class="alert alert-warning mt-2 mb-0">
+                                            <i class="fas fa-exclamation-triangle"></i> Model not available
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Method 2: Statistical Pattern Analysis -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="card {% if comparison.best_method == 'method_2' %}border-primary border-2{% else %}border-secondary{% endif %}">
+                                    <div class="card-header {% if comparison.method_2.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1"><i class="fas fa-chart-bar"></i> Method 2: Statistical Pattern Analysis</h5>
+                                                <small class="text-white-50">{{ comparison.method_2.description }}</small>
+                                            </div>
+                                            {% if comparison.best_method == 'method_2' %}
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-trophy"></i> Best Match</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 {% if comparison.method_2.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white rounded">
+                                                    <h3 class="mb-1">{% if comparison.method_2.is_ai_generated %}AI{% else %}Real{% endif %}</h3>
+                                                    <small>Detection</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h3 class="mb-1">{{ comparison.method_2.confidence|percentage|floatformat:0 }}%</h3>
+                                                    <small>Confidence</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Key Indicators:</h6>
+                                                <ul class="list-unstyled mb-0">
+                                                    {% for indicator in comparison.method_2.indicators|slice:":3" %}
+                                                    <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Method 3: Metadata & Heuristic Analysis -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="card {% if comparison.best_method == 'method_3' %}border-primary border-2{% else %}border-secondary{% endif %}">
+                                    <div class="card-header {% if comparison.method_3.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1"><i class="fas fa-file-code"></i> Method 3: Metadata & Heuristic Analysis</h5>
+                                                <small class="text-white-50">{{ comparison.method_3.description }}</small>
+                                            </div>
+                                            {% if comparison.best_method == 'method_3' %}
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-trophy"></i> Best Match</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 {% if comparison.method_3.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white rounded">
+                                                    <h3 class="mb-1">{% if comparison.method_3.is_ai_generated %}AI{% else %}Real{% endif %}</h3>
+                                                    <small>Detection</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h3 class="mb-1">{{ comparison.method_3.confidence|percentage|floatformat:0 }}%</h3>
+                                                    <small>Confidence</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Key Indicators:</h6>
+                                                <ul class="list-unstyled mb-0">
+                                                    {% for indicator in comparison.method_3.indicators|slice:":3" %}
+                                                    <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- User Feedback Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card result-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-thumbs-up"></i> Help Improve Our Detection</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-3">Was this detection result correct? Your feedback helps us improve our AI model.</p>
+                                
+                                <div class="feedback-buttons mb-3">
+                                    <button class="btn btn-success me-2" onclick="submitFeedback('correct')">
+                                        <i class="fas fa-check"></i> Correct
+                                    </button>
+                                    <button class="btn btn-danger me-2" onclick="submitFeedback('incorrect')">
+                                        <i class="fas fa-times"></i> Incorrect
+                                    </button>
+                                    <button class="btn btn-warning me-2" onclick="submitFeedback('unsure')">
+                                        <i class="fas fa-question"></i> Unsure
+                                    </button>
+                                </div>
+                                
+                                <div class="feedback-notes mb-3">
+                                    <label for="feedbackNotes" class="form-label">Additional Notes (Optional):</label>
+                                    <textarea class="form-control" id="feedbackNotes" rows="2" placeholder="Tell us more about why this detection was correct or incorrect..."></textarea>
+                                </div>
+                                
+                                <div id="feedbackStatus" class="alert alert-info" style="display: none;">
+                                    <i class="fas fa-info-circle"></i> <span id="feedbackMessage"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="current-feedback">
+                                    <h6>Current Feedback:</h6>
+                                    <div id="currentFeedbackStatus" class="badge bg-secondary">
+                                        {{ image_upload.get_feedback_status }}
+                                    </div>
+                                    {% if image_upload.feedback_notes %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">{{ image_upload.feedback_notes }}</small>
+                                    </div>
+                                    {% endif %}
+                                    {% if image_upload.feedback_timestamp %}
+                                    <div class="mt-1">
+                                        <small class="text-muted">Submitted: {{ image_upload.feedback_timestamp|date:"M d, Y H:i" }}</small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Technical Details -->
         <div class="row mt-4">
             <div class="col-12">
@@ -167,5 +405,58 @@
             }, 500);
         });
     });
+    
+    // Feedback submission function
+    function submitFeedback(feedback) {
+        const notes = document.getElementById('feedbackNotes').value;
+        const imageId = {{ image_upload.id }};
+        
+        // Show loading state
+        const statusDiv = document.getElementById('feedbackStatus');
+        const messageSpan = document.getElementById('feedbackMessage');
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'alert alert-info';
+        messageSpan.textContent = 'Submitting feedback...';
+        
+        // Submit feedback
+        fetch(`/feedback/${imageId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+            },
+            body: JSON.stringify({
+                feedback: feedback,
+                notes: notes
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.className = 'alert alert-success';
+                messageSpan.textContent = data.message;
+                
+                // Update current feedback status
+                const currentStatus = document.getElementById('currentFeedbackStatus');
+                currentStatus.textContent = data.feedback_status;
+                currentStatus.className = 'badge bg-success';
+                
+                // Disable buttons temporarily
+                const buttons = document.querySelectorAll('.feedback-buttons button');
+                buttons.forEach(btn => btn.disabled = true);
+                
+                setTimeout(() => {
+                    buttons.forEach(btn => btn.disabled = false);
+                }, 2000);
+            } else {
+                statusDiv.className = 'alert alert-danger';
+                messageSpan.textContent = 'Error: ' + data.error;
+            }
+        })
+        .catch(error => {
+            statusDiv.className = 'alert alert-danger';
+            messageSpan.textContent = 'Error submitting feedback: ' + error.message;
+        });
+    }
 </script>
 {% endblock %}

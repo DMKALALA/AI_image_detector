@@ -1,0 +1,424 @@
+{% extends 'detector/base.html' %}
+{% load detector_extras %}
+
+{% block title %}Batch Upload - AI Image Detector{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'detector:home' %}">Home</a></li>
+                        <li class="breadcrumb-item active">Batch Upload</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="fas fa-images"></i> Batch Image Upload</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Upload Form -->
+                        <form id="batchUploadForm" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label class="form-label">Select or Drag & Drop Multiple Images</label>
+                                
+                                <!-- Drag and Drop Area -->
+                                <div class="upload-area" id="uploadArea" style="border: 2px dashed #dee2e6; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s;">
+                                    <div class="file-input-wrapper">
+                                        <input type="file" class="form-control d-none" id="images" name="images" multiple accept="image/*">
+                                        <div class="file-input-overlay">
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                            <h5 id="uploadText">Drag & Drop Images Here or Click to Select</h5>
+                                            <p class="text-muted mb-3">Supported formats: JPG, PNG, GIF, WebP (Max 10 images, 10MB each)</p>
+                                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('images').click()">
+                                                <i class="fas fa-folder-open"></i> Choose Files
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- File Preview List -->
+                                    <div id="filePreviewList" style="display: none; margin-top: 1rem;">
+                                        <h6>Selected Files (<span id="fileCount">0</span>/10):</h6>
+                                        <div id="fileList" class="list-group mt-2" style="max-height: 300px; overflow-y: auto;"></div>
+                                        <div id="rejectedFiles" class="mt-2" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-text mt-2">Maximum 10 images per batch. Only the first 10 will be processed.</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn" disabled>
+                                    <i class="fas fa-upload"></i> Upload & Analyze Images
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <!-- Progress Section -->
+                        <div id="progressSection" style="display: none;" class="mt-4">
+                            <h5>Processing Images...</h5>
+                            <div class="progress mb-3">
+                                <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div id="progressText" class="text-center">Preparing...</div>
+                        </div>
+                        
+                        <!-- Results Section -->
+                        <div id="resultsSection" style="display: none;" class="mt-4">
+                            <h5>Processing Results</h5>
+                            <div id="resultsContainer"></div>
+                            
+                            <div class="text-center mt-3">
+                                <a href="{% url 'detector:batch_results' %}" class="btn btn-success">
+                                    <i class="fas fa-list"></i> View All Results
+                                </a>
+                                <button class="btn btn-primary" onclick="resetForm()">
+                                    <i class="fas fa-plus"></i> Upload More Images
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .upload-area.dragover {
+        border-color: #0d6efd !important;
+        background-color: #f0f8ff;
+    }
+    .file-preview-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+    .file-preview-item img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .file-info {
+        flex: 1;
+        margin-left: 1rem;
+    }
+    .file-info small {
+        display: block;
+        color: #6c757d;
+    }
+</style>
+<script>
+    const MAX_FILES = 10;
+    let selectedFiles = [];
+    
+    const uploadArea = document.getElementById('uploadArea');
+    const imagesInput = document.getElementById('images');
+    const filePreviewList = document.getElementById('filePreviewList');
+    const fileList = document.getElementById('fileList');
+    const fileCount = document.getElementById('fileCount');
+    const rejectedFiles = document.getElementById('rejectedFiles');
+    const uploadText = document.getElementById('uploadText');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    // Drag and drop events
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+        uploadText.textContent = 'Drop your images here!';
+    });
+    
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        uploadText.textContent = 'Drag & Drop Images Here or Click to Select';
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        uploadText.textContent = 'Drag & Drop Images Here or Click to Select';
+        
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+        handleFiles(files);
+    });
+    
+    // Click upload area to trigger file selection
+    uploadArea.addEventListener('click', function(e) {
+        // Don't trigger if clicking on a button or file item
+        if (e.target.tagName !== 'BUTTON' && !e.target.closest('.file-preview-item')) {
+            imagesInput.click();
+        }
+    });
+    
+    // File input change
+    imagesInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        handleFiles(files);
+    });
+    
+    function handleFiles(files) {
+        // Filter to only image files and limit to MAX_FILES
+        const imageFiles = files.filter(f => f.type.startsWith('image/'));
+        const acceptedFiles = imageFiles.slice(0, MAX_FILES);
+        const rejected = imageFiles.slice(MAX_FILES);
+        
+        // Update selectedFiles array
+        selectedFiles = acceptedFiles;
+        
+        // Update file input
+        const dataTransfer = new DataTransfer();
+        acceptedFiles.forEach(file => dataTransfer.items.add(file));
+        imagesInput.files = dataTransfer.files;
+        
+        // Update UI
+        updateFilePreview(acceptedFiles, rejected);
+        updateUploadButton();
+    }
+    
+    function updateFilePreview(files, rejected) {
+        if (files.length === 0) {
+            filePreviewList.style.display = 'none';
+            return;
+        }
+        
+        filePreviewList.style.display = 'block';
+        fileCount.textContent = files.length;
+        
+        // Clear previous previews
+        fileList.innerHTML = '';
+        rejectedFiles.innerHTML = '';
+        rejectedFiles.style.display = 'none';
+        
+        // Display accepted files
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const item = document.createElement('div');
+                item.className = 'file-preview-item';
+                item.innerHTML = `
+                    <img src="${e.target.result}" alt="${file.name}">
+                    <div class="file-info">
+                        <strong>${file.name}</strong>
+                        <small>${formatFileSize(file.size)}</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeFile(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                fileList.appendChild(item);
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Display rejected files message if any
+        if (rejected.length > 0) {
+            rejectedFiles.style.display = 'block';
+            rejectedFiles.className = 'alert alert-warning';
+            rejectedFiles.innerHTML = `
+                <strong>⚠️ ${rejected.length} file(s) rejected:</strong> 
+                Maximum ${MAX_FILES} files allowed. Only the first ${MAX_FILES} files will be processed.
+                <ul class="mb-0 mt-2">
+                    ${rejected.map(f => `<li>${f.name}</li>`).join('')}
+                </ul>
+            `;
+        }
+    }
+    
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        
+        // Update file input
+        const dataTransfer = new DataTransfer();
+        selectedFiles.forEach(file => dataTransfer.items.add(file));
+        imagesInput.files = dataTransfer.files;
+        
+        // Update UI
+        updateFilePreview(selectedFiles, []);
+        updateUploadButton();
+    }
+    
+    function updateUploadButton() {
+        uploadBtn.disabled = selectedFiles.length === 0;
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+    
+    document.getElementById('batchUploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        const files = imagesInput.files;
+        
+        if (files.length === 0) {
+            alert('Please select at least one image.');
+            return;
+        }
+        
+        // Ensure we only process MAX_FILES (should already be enforced, but double-check)
+        const filesToProcess = Array.from(files).slice(0, MAX_FILES);
+        
+        // Add CSRF token
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        // Add files (limited to MAX_FILES)
+        for (let i = 0; i < filesToProcess.length; i++) {
+            formData.append('images', filesToProcess[i]);
+        }
+        
+        // Show progress section
+        document.getElementById('progressSection').style.display = 'block';
+        document.getElementById('resultsSection').style.display = 'none';
+        document.getElementById('uploadBtn').disabled = true;
+        
+        // Simulate progress updates
+        let progress = 0;
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            
+            progressBar.style.width = progress + '%';
+            progressText.textContent = `Processing... ${Math.round(progress)}%`;
+        }, 200);
+        
+        // Submit form
+        fetch('{% url "detector:batch_upload" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            progressText.textContent = 'Complete!';
+            
+            setTimeout(() => {
+                displayResults(data);
+            }, 500);
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            progressText.textContent = 'Error: ' + error.message;
+            progressBar.className = 'progress-bar bg-danger';
+        });
+    });
+    
+    function displayResults(data) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        const progressSection = document.getElementById('progressSection');
+        const resultsSection = document.getElementById('resultsSection');
+        
+        progressSection.style.display = 'none';
+        resultsSection.style.display = 'block';
+        
+        let html = '<div class="row">';
+        
+        data.results.forEach((result, index) => {
+            if (result.success) {
+                const statusClass = result.is_ai_generated ? 'danger' : 'success';
+                const statusText = result.is_ai_generated ? 'AI-Generated' : 'Real';
+                const confidence = Math.round(result.confidence * 100);
+                
+                html += `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card">
+                            <div class="card-header bg-${statusClass} text-white">
+                                <h6 class="mb-0">${result.filename}</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Result:</strong> ${statusText}</p>
+                                <p class="mb-1"><strong>Confidence:</strong> ${confidence}%</p>
+                                <a href="/result/${result.id}/" class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border-danger">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0">${result.filename}</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-danger mb-0"><strong>Error:</strong> ${result.error}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        html += '</div>';
+        
+        // Add summary
+        const successCount = data.results.filter(r => r.success).length;
+        const errorCount = data.results.filter(r => !r.success).length;
+        
+        let summaryHtml = `
+            <div class="alert alert-info">
+                <h6>Batch Processing Summary:</h6>
+                <p class="mb-0">
+                    <strong>Total Processed:</strong> ${data.total_processed} images | 
+                    <strong>Success:</strong> ${successCount} | 
+                    <strong>Errors:</strong> ${errorCount}
+                </p>
+            </div>
+        `;
+        
+        // Add rejected files warning if any
+        if (data.rejected_files && data.rejected_files.length > 0) {
+            summaryHtml += `
+                <div class="alert alert-warning">
+                    <h6>⚠️ Rejected Files (${data.rejected_files.length}):</h6>
+                    <p class="mb-2"><strong>Reason:</strong> Maximum 10 files per batch. Only the first 10 files were processed.</p>
+                    <ul class="mb-0">
+                        ${data.rejected_files.map(f => `<li>${f.filename}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        html = summaryHtml + html;
+        
+        resultsContainer.innerHTML = html;
+        document.getElementById('uploadBtn').disabled = false;
+    }
+    
+    function resetForm() {
+        document.getElementById('batchUploadForm').reset();
+        selectedFiles = [];
+        document.getElementById('progressSection').style.display = 'none';
+        document.getElementById('resultsSection').style.display = 'none';
+        document.getElementById('filePreviewList').style.display = 'none';
+        document.getElementById('uploadBtn').disabled = true;
+        uploadText.textContent = 'Drag & Drop Images Here or Click to Select';
+    }
+</script>
+{% endblock %}
