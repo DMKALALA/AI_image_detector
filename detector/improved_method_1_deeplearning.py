@@ -65,9 +65,7 @@ class ImprovedDeepLearningMethod1:
                 )
                 model1.to(self.device)
                 model1.eval()
-                # Use torch.inference_mode() for lower memory usage
-                with torch.inference_mode():
-                    self.models['efficientnet_b0'] = model1
+                self.models['efficientnet_b0'] = model1
                 logger.info("✓ Loaded EfficientNet-B0 (memory-optimized)")
             except Exception as e:
                 logger.warning(f"Could not load EfficientNet-B0: {e}")
