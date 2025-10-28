@@ -41,8 +41,39 @@ class ImprovedDeepLearningMethod1:
         logger.info(f"Improved Method 1 initialized with {len(self.models)} models on {self.device}")
     
     def _initialize_models(self):
-        """Initialize specialized models for AI detection"""
+        """Initialize specialized models for AI detection (memory-optimized for free tier)"""
         
+        # On memory-constrained environments (512MB), load only lightweight models
+        import os
+        memory_constrained = os.environ.get('MEMORY_CONSTRAINED', 'true').lower() == 'true'
+        
+        if memory_constrained:
+            # Only load lightweight EfficientNet-B0 for free tier (much smaller than B4)
+            try:
+                model1 = timm.create_model(
+                    'efficientnet_b0',  # B0 is much smaller than B4
+                    pretrained=True,
+                    num_classes=1000
+                )
+                num_features = model1.classifier.in_features
+                model1.classifier = nn.Sequential(
+                    nn.Dropout(0.3),
+                    nn.Linear(num_features, 128),  # Smaller hidden layer
+                    nn.ReLU(),
+                    nn.Dropout(0.2),
+                    nn.Linear(128, 2)
+                )
+                model1.to(self.device)
+                model1.eval()
+                # Use torch.inference_mode() for lower memory usage
+                with torch.inference_mode():
+                    self.models['efficientnet_b0'] = model1
+                logger.info("✓ Loaded EfficientNet-B0 (memory-optimized)")
+            except Exception as e:
+                logger.warning(f"Could not load EfficientNet-B0: {e}")
+            return  # Skip loading other models on free tier
+        
+        # For paid tiers with more memory, load full ensemble
         # Model 1: EfficientNet-B4 (excellent for artifact detection)
         try:
             model1 = timm.create_model(

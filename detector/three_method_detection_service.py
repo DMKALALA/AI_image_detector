@@ -79,7 +79,15 @@ class ThreeMethodDetectionService:
     """
     
     def __init__(self):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # Force CPU mode for free tier (512MB limit) - CUDA models use too much memory
+        # Check if we're on a memory-constrained environment
+        import os
+        force_cpu = os.environ.get('FORCE_CPU', 'true').lower() == 'true'
+        if force_cpu:
+            self.device = torch.device('cpu')
+            logger.info("Using CPU mode for memory efficiency (free tier)")
+        else:
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.trained_model = None
         self.trained_processor = None
         
