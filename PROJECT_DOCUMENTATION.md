@@ -887,6 +887,64 @@ Added patterns to prevent committing:
 
 ---
 
+## Website Icon & Branding
+
+### Custom Favicon Implementation (October 28, 2025)
+
+A fun, animated favicon was created to enhance the website's visual identity.
+
+#### Icon Design
+
+**File**: `static/images/favicon.svg`
+- **Style**: Animated SVG favicon
+- **Theme**: AI detection robot with scanning capabilities
+- **Colors**: 
+  - Primary: Indigo (#6366f1) - tech/AI theme
+  - Accent: Gold (#fbbf24) - detection indicators
+  - Background: White with transparency
+
+#### Design Elements
+
+1. **Robot Head**: Rounded square representing an AI detector
+2. **Animated Eyes**: Pulsing circles that simulate detection/scanning
+3. **Camera Lens**: Central detection sensor with inner lens details
+4. **Sparkle Indicators**: Four animated points around the icon (detection active)
+5. **Scan Lines**: Animated horizontal line that moves up/down (analyzing)
+
+#### Animation Features
+
+- **Eye Pulsing**: Eyes expand and contract to show active detection
+- **Sparkle Fade**: Detection indicators fade in/out rhythmically
+- **Scan Animation**: Continuous scanning line movement
+- **Smooth Transitions**: All animations use SVG animate elements
+
+#### Implementation
+
+Added to `detector/templates/detector/base.html`:
+```html
+<!-- Favicon - Fun animated AI detection robot icon -->
+<link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+<link rel="alternate icon" href="{% static 'images/favicon.svg' %}">
+<link rel="apple-touch-icon" href="{% static 'images/favicon.svg' %}">
+```
+
+#### Browser Compatibility
+
+- ✅ Modern browsers (Chrome, Firefox, Safari, Edge) - Full SVG animation support
+- ✅ SVG format ensures crisp display at all sizes
+- ✅ Lightweight (~1KB) - No performance impact
+- ✅ Scalable to any size without quality loss
+
+#### Benefits
+
+1. **Visual Identity**: Unique, recognizable icon for the AI detector
+2. **User Experience**: Professional appearance in browser tabs
+3. **Brand Recognition**: Fun, tech-forward design reflects AI detection theme
+4. **Engagement**: Animated elements catch user attention
+5. **Professional**: Polished look enhances credibility
+
+---
+
 **Last Updated**: October 28, 2025  
 **Maintained By**: Development Team  
 **Status**: Active Development
