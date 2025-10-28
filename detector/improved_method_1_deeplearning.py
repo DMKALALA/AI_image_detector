@@ -141,14 +141,19 @@ class ImprovedDeepLearningMethod1:
             logger.warning(f"Could not load ConvNeXt Base: {e}")
         
         # Model weights (based on typical performance for artifact detection)
-        # EfficientNet-B4 is excellent for compression artifacts
-        # ViT-Large captures global inconsistencies
-        # ConvNeXt is good baseline
-        self.model_weights = {
-            'efficientnet_b4': 0.40,  # Strong for artifact detection
-            'vit_large': 0.35,        # Strong for pattern inconsistencies
-            'convnext_base': 0.25     # Reliable baseline
-        }
+        # Update based on which models are loaded
+        if memory_constrained:
+            # Free tier - only efficientnet_b0 loaded
+            self.model_weights = {
+                'efficientnet_b0': 1.0  # Only model on free tier
+            }
+        else:
+            # Paid tier - full ensemble
+            self.model_weights = {
+                'efficientnet_b4': 0.40,  # Strong for artifact detection
+                'vit_large': 0.35,        # Strong for pattern inconsistencies
+                'convnext_base': 0.25     # Reliable baseline
+            }
         
         # Normalize weights based on available models
         available_models = list(self.models.keys())
