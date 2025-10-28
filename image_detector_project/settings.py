@@ -89,8 +89,12 @@ WSGI_APPLICATION = "image_detector_project.wsgi.application"
 if 'DATABASE_URL' in os.environ:
     try:
         import dj_database_url
+        db_config = dj_database_url.parse(os.environ.get('DATABASE_URL'))
+        # Ensure we use psycopg3 (psycopg) instead of psycopg2 for Python 3.13 compatibility
+        # Django 4.2+ supports psycopg3 automatically if installed
+        db_config['ENGINE'] = 'django.db.backends.postgresql'
         DATABASES = {
-            'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+            'default': db_config
         }
     except ImportError:
         # Fallback to SQLite if dj-database-url not installed
