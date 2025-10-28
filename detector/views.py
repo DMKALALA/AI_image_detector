@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 from .models import ImageUpload
 from .forms import ImageUploadForm
-from .three_method_detection_service import three_method_detection_service
+from .three_method_detection_service import get_detection_service
 import os
 import json
 from PIL import Image
@@ -20,7 +20,7 @@ def home(request):
             
             # Perform AI detection using comparative service
             try:
-                result = three_method_detection_service.detect_ai_image(image_upload.image.path)
+                result = get_detection_service().detect_ai_image(image_upload.image.path)
                 
                 if 'error' not in result:
                     image_upload.is_ai_generated = result['is_ai_generated']
@@ -181,7 +181,7 @@ def batch_upload(request):
                 image_upload.save()
                 
                 # Perform AI detection using comparative service
-                result = three_method_detection_service.detect_ai_image(image_upload.image.path)
+                result = get_detection_service().detect_ai_image(image_upload.image.path)
                 
                 if 'error' not in result:
                     image_upload.is_ai_generated = result['is_ai_generated']
@@ -424,7 +424,7 @@ def api_detect_realtime(request):
         
         try:
             # Perform detection using comparative service
-            result = three_method_detection_service.detect_ai_image(tmp_path)
+            result = get_detection_service().detect_ai_image(tmp_path)
             
             # Return result
             return JsonResponse({
@@ -478,7 +478,7 @@ def api_batch_detect(request):
                 
                 try:
                     # Perform detection using comparative service
-                    result = three_method_detection_service.detect_ai_image(tmp_path)
+                    result = get_detection_service().detect_ai_image(tmp_path)
                     
                     results.append({
                         'filename': file.name,

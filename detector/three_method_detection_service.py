@@ -1057,5 +1057,26 @@ class ThreeMethodDetectionService:
             }
         }
 
-# Create global instance
-three_method_detection_service = ThreeMethodDetectionService()
+# Lazy-loaded singleton instance - only create when first accessed
+# This prevents blocking Django startup with heavy model loading
+_service_instance = None
+
+def get_detection_service():
+    """Get or create the detection service instance (lazy loading).
+    
+    Models are loaded only on first detection request, not at startup.
+    This prevents worker timeouts during deployment.
+    """
+    global _service_instance
+    if _service_instance is None:
+        _service_instance = ThreeMethodDetectionService()
+    return _service_instance
+
+# Module-level instance for backward compatibility
+# Access via get_detection_service() is preferred
+class _ServiceProxy:
+    """Proxy to lazy-load the service."""
+    def __getattr__(self, name):
+        return getattr(get_detection_service(), name)
+
+three_method_detection_service = _ServiceProxy()
