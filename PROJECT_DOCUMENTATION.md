@@ -945,6 +945,89 @@ Added to `detector/templates/detector/base.html`:
 
 ---
 
+## Deployment Guide
+
+### Web Deployment Options
+
+The application can be deployed to various platforms. See **`DEPLOYMENT_GUIDE.md`** for complete instructions.
+
+#### Quick Deploy Options
+
+1. **Render** (Recommended - Free Tier Available)
+   - Easy GitHub integration
+   - Free PostgreSQL database
+   - Automatic SSL certificates
+   - See `DEPLOYMENT_GUIDE.md` for step-by-step instructions
+
+2. **Railway**
+   - Simple deployment
+   - Automatic deployments from GitHub
+   - $5 free credit/month
+
+3. **PythonAnywhere**
+   - Free tier available
+   - Good for testing
+   - Limited but sufficient for small apps
+
+4. **Heroku** (Requires Paid Plan)
+   - Professional hosting
+   - Add-on ecosystem
+   - $7/month minimum
+
+#### Production Requirements
+
+**Files Created for Deployment:**
+- `Procfile` - Process configuration for hosting platforms
+- `runtime.txt` - Python version specification
+- `.env.example` - Environment variables template
+- Updated `requirements.txt` - Production dependencies (gunicorn, whitenoise, etc.)
+
+**Settings Updated:**
+- Environment variable support (SECRET_KEY, DEBUG, ALLOWED_HOSTS)
+- PostgreSQL database support (via DATABASE_URL)
+- WhiteNoise middleware for static file serving
+- Production-ready static/media file configuration
+
+**Dependencies Added:**
+- `gunicorn` - Production WSGI server
+- `whitenoise` - Static file serving middleware
+- `dj-database-url` - Database URL parsing
+- `psycopg2-binary` - PostgreSQL adapter
+- `python-dotenv` - Environment variable management
+
+#### Deployment Checklist
+
+Before deploying:
+- [ ] Update `SECRET_KEY` in environment variables
+- [ ] Set `DEBUG=False` in production
+- [ ] Configure `ALLOWED_HOSTS` with your domain
+- [ ] Set up PostgreSQL database
+- [ ] Configure media file storage (AWS S3 recommended)
+- [ ] Test locally with production settings
+
+After deployment:
+- [ ] Run migrations: `python manage.py migrate`
+- [ ] Collect static files: `python manage.py collectstatic`
+- [ ] Create superuser: `python manage.py createsuperuser`
+- [ ] Verify all features work on production
+- [ ] Monitor logs for errors
+
+#### Quick Start: Render Deployment
+
+1. Push code to GitHub
+2. Create account at render.com
+3. Connect GitHub repository
+4. Create PostgreSQL database
+5. Create Web Service with:
+   - Build: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
+   - Start: `gunicorn image_detector_project.wsgi:application`
+6. Set environment variables (SECRET_KEY, DATABASE_URL, DEBUG, ALLOWED_HOSTS)
+7. Deploy!
+
+For detailed instructions, see **`DEPLOYMENT_GUIDE.md`**.
+
+---
+
 **Last Updated**: October 28, 2025  
 **Maintained By**: Development Team  
 **Status**: Active Development
