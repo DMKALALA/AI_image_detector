@@ -2,6 +2,12 @@
 
 A Django web application that uses artificial intelligence to detect whether images are AI-generated or real/human-created. Built with Django, PyTorch, and the BLIP (Bootstrapping Language-Image Pre-training) model from Hugging Face Transformers.
 
+## 🌐 Live Demo
+
+**Deployed Application**: https://ai-image-detector-1.onrender.com
+
+> **Note**: Free instances on Render spin down after periods of inactivity. First request may take 30-50 seconds to wake up the service.
+
 ## Features
 
 - 🖼️ **Image Upload**: Upload images in various formats (JPG, PNG, GIF, WebP)
