@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ai-image-detector
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn image_detector_project.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.18
+      - key: SECRET_KEY
+        sync: false
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: ai-image-detector-n6wh.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-detector-db
+          property: connectionString
+
+databases:
+  - name: ai-detector-db
+    plan: free
+

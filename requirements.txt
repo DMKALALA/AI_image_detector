@@ -1,5 +1,5 @@
 Django==4.2.7
-Pillow==10.1.0
+Pillow>=10.4.0
 torch==2.2.0
 torchvision==0.17.0
 transformers==4.36.2
