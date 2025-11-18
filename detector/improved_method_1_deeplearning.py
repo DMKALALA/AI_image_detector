@@ -69,6 +69,11 @@ class ImprovedDeepLearningMethod1:
                 logger.info("✓ Loaded EfficientNet-B0 (memory-optimized)")
             except Exception as e:
                 logger.warning(f"Could not load EfficientNet-B0: {e}")
+            
+            # Set model weights for memory-constrained mode BEFORE returning
+            self.model_weights = {
+                'efficientnet_b0': 1.0  # Only model on free tier
+            }
             return  # Skip loading other models on free tier
         
         # For paid tiers with more memory, load full ensemble
