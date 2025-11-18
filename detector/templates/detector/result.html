@@ -230,6 +230,27 @@
                                                 <td><small class="text-muted">{{ comparison.method_4.description }}</small></td>
                                             </tr>
                                             {% endif %}
+                                            
+                                            {% if comparison.method_5 and comparison.method_5.available %}
+                                            <tr class="table-warning">
+                                                <td><strong>🏢 Method 5:</strong> {{ comparison.method_5.name }}</td>
+                                                <td>
+                                                    <span class="badge {% if comparison.method_5.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}">
+                                                        {% if comparison.method_5.is_ai_generated %}AI-Generated{% else %}Real{% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 25px;">
+                                                        <div class="progress-bar {% if comparison.method_5.confidence > 0.7 %}bg-success{% elif comparison.method_5.confidence > 0.4 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                             role="progressbar" 
+                                                             style="width: {{ comparison.method_5.confidence|floatformat:2|mul:100 }}%">
+                                                            {{ comparison.method_5.confidence|floatformat:2|mul:100 }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><small class="text-muted">{{ comparison.method_5.description }}</small></td>
+                                            </tr>
+                                            {% endif %}
                                         </tbody>
                                     </table>
                                 </div>
@@ -260,6 +281,8 @@
                                             <span class="badge bg-primary">{{ comparison.method_3.name }}</span>
                                         {% elif comparison.best_method == 'method_4' %}
                                             <span class="badge bg-primary">⭐ {{ comparison.method_4.name }}</span>
+                                        {% elif comparison.best_method == 'method_5' %}
+                                            <span class="badge bg-primary">🏢 {{ comparison.method_5.name }}</span>
                                         {% endif %}
                                     </p>
                                 </div>
@@ -445,6 +468,51 @@
                         </div>
                         {% endif %}
                         
+                        <!-- Method 5: Enterprise Models Ensemble -->
+                        {% if comparison.method_5 and comparison.method_5.available %}
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="card {% if comparison.best_method == 'method_5' %}border-primary border-3{% else %}border-warning border-2{% endif %}">
+                                    <div class="card-header {% if comparison.method_5.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1"><i class="fas fa-building"></i> 🏢 Method 5: Enterprise Models Ensemble</h5>
+                                                <small class="text-white-50">{{ comparison.method_5.description }}</small>
+                                            </div>
+                                            {% if comparison.best_method == 'method_5' %}
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-trophy"></i> Best Match</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 {% if comparison.method_5.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white rounded">
+                                                    <h3 class="mb-1">{% if comparison.method_5.is_ai_generated %}AI{% else %}Real{% endif %}</h3>
+                                                    <small>Detection</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h3 class="mb-1">{{ comparison.method_5.confidence|percentage|floatformat:0 }}%</h3>
+                                                    <small>Confidence</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Key Indicators:</h6>
+                                                <ul class="list-unstyled mb-0">
+                                                    {% for indicator in comparison.method_5.indicators|slice:":5" %}
+                                                    <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         {% endwith %}
                     </div>
                 </div>
@@ -520,13 +588,15 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <h6>Model Information:</h6>
-                                <ul class="list-unstyled">
-                                    <li><strong>Models:</strong> 4-Method Ensemble Detection System</li>
-                                    <li><strong>Method 1:</strong> EfficientNet/ViT/ResNet Deep Learning</li>
+                                <ul class="list-unstyled small">
+                                    <li><strong>System:</strong> 5-Method Ensemble Detection + Feedback Learning</li>
+                                    <li><strong>Method 1:</strong> Deep Learning (EfficientNet/ViT/ResNet)</li>
                                     <li><strong>Method 2:</strong> Statistical Pattern Analysis</li>
                                     <li><strong>Method 3:</strong> Advanced Spectral & Forensics</li>
-                                    <li><strong>Method 4:</strong> HuggingFace Specialists (ViT, AI/Human, Classifier)</li>
-                                    <li><strong>Framework:</strong> PyTorch 2.2 + Transformers 4.36</li>
+                                    <li><strong>Method 4:</strong> HuggingFace (ViT, AI/Human, Classifier)</li>
+                                    <li><strong>Method 5:</strong> Enterprise (Hive, Reality Defender, CLIP)</li>
+                                    <li><strong>Learning:</strong> Feedback-based re-upload detection</li>
+                                    <li><strong>Stack:</strong> PyTorch 2.2 + Transformers 4.36 (stable)</li>
                                 </ul>
                             </div>
                             <div class="col-md-6">

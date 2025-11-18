@@ -114,6 +114,45 @@ def submit_feedback(request, image_id):
         # Save feedback
         image_upload.save_feedback(feedback, notes)
         
+        # Record feedback in learning system for re-upload detection
+        try:
+            from detector.feedback_learning import get_feedback_service
+            feedback_service = get_feedback_service()
+            
+            # Determine correct answer from feedback
+            correct_answer = None
+            if feedback == 'incorrect':
+                # If user says we're wrong, the correct answer is opposite of our prediction
+                correct_answer = not image_upload.is_ai_generated
+            elif feedback == 'correct':
+                # If user confirms, our prediction was right
+                correct_answer = image_upload.is_ai_generated
+            
+            # Record feedback with image hash
+            if image_upload.image and hasattr(image_upload.image, 'path'):
+                feedback_service.record_feedback(
+                    image_hash=None,  # Will compute from path
+                    prediction=image_upload.is_ai_generated,
+                    confidence=image_upload.confidence_score,
+                    user_feedback=feedback,
+                    correct_answer=correct_answer
+                )
+                # Compute and save hash
+                image_hash = feedback_service.compute_image_hash(image_upload.image.path)
+                if image_hash:
+                    feedback_service.record_feedback(
+                        image_hash=image_hash,
+                        prediction=image_upload.is_ai_generated,
+                        confidence=image_upload.confidence_score,
+                        user_feedback=feedback,
+                        correct_answer=correct_answer
+                    )
+        except Exception as e:
+            # Don't fail feedback submission if learning fails
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Feedback learning recording failed: {e}")
+        
         # Trigger adaptive learning (asynchronously)
         try:
             from detector.adaptive_learning_service import adaptive_learning_service

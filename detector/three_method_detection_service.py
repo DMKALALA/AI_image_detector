@@ -90,6 +90,15 @@ except ImportError as e:
     ENTERPRISE_MODELS_AVAILABLE = False
     logger.warning(f"Could not import Enterprise models: {e}")
 
+# Feedback-based learning system
+try:
+    from detector.feedback_learning import get_feedback_service
+    FEEDBACK_LEARNING_AVAILABLE = True
+    logger.info("✓ Feedback learning module imported successfully")
+except ImportError as e:
+    FEEDBACK_LEARNING_AVAILABLE = False
+    logger.warning(f"Could not import feedback learning: {e}")
+
 class ThreeMethodDetectionService:
     """
     Service that runs three distinct AI detection methods independently
@@ -210,7 +219,8 @@ class ThreeMethodDetectionService:
             'method_1': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0},
             'method_2': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0},
             'method_3': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0},
-            'method_4': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0}
+            'method_4': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0},
+            'method_5': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0}
         }
         
         # Accuracy-based weights (updated with Improved Methods 1 & 3)
@@ -228,10 +238,11 @@ class ThreeMethodDetectionService:
         # Method 1: 56.7% accuracy - BEST performer
         # Method 2: 40% accuracy - has 17 false positives
         default_weights = {
-            'method_1': 0.30,  # Deep Learning - good baseline
-            'method_2': 0.30,  # Statistical - reliable patterns
+            'method_1': 0.20,  # Deep Learning - good baseline
+            'method_2': 0.25,  # Statistical - reliable patterns
             'method_3': 0.05,  # Spectral - REDUCED (overconfident, 100% confidence issue)
-            'method_4': 0.35   # HuggingFace - BOOSTED (3 fine-tuned models @ 100% val accuracy)
+            'method_4': 0.30,  # HuggingFace - Fine-tuned specialists
+            'method_5': 0.20   # Enterprise - Industry-proven models (optional)
         }
         
         # Default confidence calibration
@@ -239,7 +250,8 @@ class ThreeMethodDetectionService:
             'method_1': 0.8,   # Improved Method 1 - conservative start, adjust after testing
             'method_2': 1.0,   # Method 2 has excellent calibration - no adjustment needed
             'method_3': 0.5,   # REDUCED from 0.7 - Method 3 shows 100% confidence, needs major reduction
-            'method_4': 0.95   # Hugging Face models - fine-tuned specialists, expect good calibration
+            'method_4': 0.95,  # Hugging Face models - fine-tuned specialists, expect good calibration
+            'method_5': 0.90   # Enterprise models - industry-proven, good calibration expected
         }
         
         # Try to load saved weights from adaptive learning
@@ -369,6 +381,11 @@ class ThreeMethodDetectionService:
                 method_4_result = self._method_4_huggingface(image)
                 results['method_4'] = method_4_result
             
+            # METHOD 5: Enterprise Models Ensemble (Hive, Reality Defender, Sensity, CLIP) - OPTIONAL
+            if self.enterprise_ensemble:
+                method_5_result = self._method_5_enterprise(image)
+                results['method_5'] = method_5_result
+            
             # Calculate agreement first
             agreement = self._calculate_agreement(results)
             
@@ -463,6 +480,14 @@ class ThreeMethodDetectionService:
                     }
                 }
             }
+            
+            # Apply feedback-based learning adjustments
+            if FEEDBACK_LEARNING_AVAILABLE:
+                try:
+                    feedback_service = get_feedback_service()
+                    final_result = feedback_service.apply_learning_adjustment(image_path, final_result)
+                except Exception as e:
+                    logger.warning(f"Feedback learning adjustment failed: {e}")
             
             return final_result
             
@@ -953,6 +978,50 @@ class ThreeMethodDetectionService:
                 'confidence': 0.0,
                 'indicators': [f'Method 4 error: {str(e)}'],
                 'method_id': 'method_4'
+            }
+    
+    def _method_5_enterprise(self, image: Image.Image) -> Dict[str, Any]:
+        """Method 5: Enterprise Models Ensemble (Hive, Reality Defender, Sensity, CLIP)"""
+        
+        if not self.enterprise_ensemble:
+            return {
+                'is_ai_generated': False,
+                'confidence': 0.0,
+                'indicators': ['Enterprise models not available'],
+                'method_id': 'method_5'
+            }
+        
+        try:
+            result = self.enterprise_ensemble.detect(image)
+            if 'error' not in result:
+                indicators = result['indicators'] + [
+                    "⭐ Method: Enterprise Models Ensemble",
+                    "Models: Hive-style CNN, Reality Defender-style (Swin), CLIP-based",
+                    "Industry-proven architectures for AI/deepfake detection"
+                ]
+                return {
+                    'is_ai_generated': result['is_ai_generated'],
+                    'confidence': result['confidence'],
+                    'indicators': indicators,
+                    'method_id': 'method_5',
+                    'raw_score': result['probabilities']['ai'],
+                    'model_predictions': result.get('model_predictions', {}),
+                    'models_count': result.get('models_count', 0)
+                }
+            else:
+                return {
+                    'is_ai_generated': False,
+                    'confidence': 0.0,
+                    'indicators': [f'Enterprise ensemble error: {result["error"]}'],
+                    'method_id': 'method_5'
+                }
+        except Exception as e:
+            logger.error(f"Error in Method 5: {e}")
+            return {
+                'is_ai_generated': False,
+                'confidence': 0.0,
+                'indicators': [f'Method 5 error: {str(e)}'],
+                'method_id': 'method_5'
             }
     
     def _calculate_weighted_vote(self, results: Dict, agreement: Dict) -> Dict[str, Any]:
