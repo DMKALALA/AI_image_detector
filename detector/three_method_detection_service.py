@@ -81,6 +81,15 @@ except ImportError as e:
     HUGGINGFACE_AVAILABLE = False
     logger.warning(f"Could not import Hugging Face models: {e}")
 
+# Enterprise models ensemble (Hive, Reality Defender, Sensity, CLIP)
+try:
+    from detector.enterprise_models import EnterpriseModelsEnsemble
+    ENTERPRISE_MODELS_AVAILABLE = True
+    logger.info("✓ Enterprise models module imported successfully")
+except ImportError as e:
+    ENTERPRISE_MODELS_AVAILABLE = False
+    logger.warning(f"Could not import Enterprise models: {e}")
+
 class ThreeMethodDetectionService:
     """
     Service that runs three distinct AI detection methods independently
@@ -172,12 +181,28 @@ class ThreeMethodDetectionService:
                 logger.error(f"Could not initialize Hugging Face ensemble: {e}", exc_info=True)
                 self.huggingface_ensemble = None
         
+        # Method 5: Enterprise models ensemble (Hive, Reality Defender, Sensity, CLIP) - OPTIONAL
+        self.enterprise_ensemble = None
+        if ENTERPRISE_MODELS_AVAILABLE:
+            try:
+                logger.info("Attempting to initialize Enterprise model ensemble...")
+                self.enterprise_ensemble = EnterpriseModelsEnsemble(device=self.device)
+                if self.enterprise_ensemble.models:
+                    logger.info(f"✓ Enterprise ensemble initialized with {len(self.enterprise_ensemble.models)} models")
+                else:
+                    logger.warning("Enterprise ensemble initialized but no models available")
+                    self.enterprise_ensemble = None
+            except Exception as e:
+                logger.error(f"Could not initialize Enterprise ensemble: {e}", exc_info=True)
+                self.enterprise_ensemble = None
+        
         # Method names
         self.methods = {
             'method_1': 'DEEP_LEARNING_MODEL',
             'method_2': 'STATISTICAL_PATTERN_ANALYSIS',
             'method_3': 'METADATA_HEURISTIC_ANALYSIS',
-            'method_4': 'HUGGINGFACE_SPECIALIZED_MODELS'
+            'method_4': 'HUGGINGFACE_SPECIALIZED_MODELS',
+            'method_5': 'ENTERPRISE_MODELS_ENSEMBLE'
         }
         
         # Performance tracking for each method
