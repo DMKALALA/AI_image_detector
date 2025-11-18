@@ -72,6 +72,15 @@ try:
 except ImportError:
     IMPROVED_METHOD_3_AVAILABLE = False
 
+# Hugging Face specialized models ensemble
+try:
+    from detector.huggingface_models import HuggingFaceEnsemble
+    HUGGINGFACE_AVAILABLE = True
+    logger.info("✓ Hugging Face models module imported successfully")
+except ImportError as e:
+    HUGGINGFACE_AVAILABLE = False
+    logger.warning(f"Could not import Hugging Face models: {e}")
+
 class ThreeMethodDetectionService:
     """
     Service that runs three distinct AI detection methods independently
@@ -148,18 +157,35 @@ class ThreeMethodDetectionService:
                 logger.warning(f"Could not initialize forensics fallback: {e}")
                 self.improved_method_3 = None
         
+        # Method 4: Hugging Face specialized models ensemble (NEW)
+        self.huggingface_ensemble = None
+        if HUGGINGFACE_AVAILABLE:
+            try:
+                logger.info("Attempting to initialize Hugging Face model ensemble...")
+                self.huggingface_ensemble = HuggingFaceEnsemble(device=self.device)
+                if self.huggingface_ensemble.models:
+                    logger.info(f"✓ Hugging Face ensemble initialized with {len(self.huggingface_ensemble.models)} models")
+                else:
+                    logger.warning("Hugging Face ensemble initialized but no models available")
+                    self.huggingface_ensemble = None
+            except Exception as e:
+                logger.error(f"Could not initialize Hugging Face ensemble: {e}", exc_info=True)
+                self.huggingface_ensemble = None
+        
         # Method names
         self.methods = {
             'method_1': 'DEEP_LEARNING_MODEL',
             'method_2': 'STATISTICAL_PATTERN_ANALYSIS',
-            'method_3': 'METADATA_HEURISTIC_ANALYSIS'
+            'method_3': 'METADATA_HEURISTIC_ANALYSIS',
+            'method_4': 'HUGGINGFACE_SPECIALIZED_MODELS'
         }
         
         # Performance tracking for each method
         self.method_performance = {
             'method_1': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0},
             'method_2': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0},
-            'method_3': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0}
+            'method_3': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0},
+            'method_4': {'correct': 0, 'incorrect': 0, 'total': 0, 'confidence_sum': 0.0}
         }
         
         # Accuracy-based weights (updated with Improved Methods 1 & 3)
@@ -177,16 +203,18 @@ class ThreeMethodDetectionService:
         # Method 1: 56.7% accuracy - BEST performer
         # Method 2: 40% accuracy - has 17 false positives
         default_weights = {
-            'method_1': 0.50,  # 56.7% accuracy - BEST, significantly increase weight
-            'method_2': 0.40,  # 40% accuracy - reduce weight due to false positives
-            'method_3': 0.10   # 33.3% accuracy - WORST, reduce drastically (was 20%)
+            'method_1': 0.35,  # 56.7% accuracy - reduce to make room for Method 4
+            'method_2': 0.30,  # 40% accuracy - reduce weight due to false positives
+            'method_3': 0.10,  # 33.3% accuracy - WORST, reduce drastically (was 20%)
+            'method_4': 0.25   # NEW: Hugging Face specialized models - strong expected performance
         }
         
         # Default confidence calibration
         default_calibration = {
             'method_1': 0.8,   # Improved Method 1 - conservative start, adjust after testing
             'method_2': 1.0,   # Method 2 has excellent calibration - no adjustment needed
-            'method_3': 0.7    # Improved Method 3 - conservative start, should be more reliable than old
+            'method_3': 0.7,   # Improved Method 3 - conservative start, should be more reliable than old
+            'method_4': 0.95   # Hugging Face models - pre-trained specialists, expect good calibration
         }
         
         # Try to load saved weights from adaptive learning
@@ -311,6 +339,11 @@ class ThreeMethodDetectionService:
             method_3_result = self._method_3_metadata_heuristics(image, image_path)
             results['method_3'] = method_3_result
             
+            # METHOD 4: Hugging Face Specialized Models (NEW)
+            if self.huggingface_ensemble:
+                method_4_result = self._method_4_huggingface(image)
+                results['method_4'] = method_4_result
+            
             # Calculate agreement first
             agreement = self._calculate_agreement(results)
             
@@ -352,6 +385,14 @@ class ThreeMethodDetectionService:
                     'agreement': self._calculate_agreement(results),
                     'performance_stats': self.method_performance.copy()
                 },
+                'method_4': {
+                    'name': 'Hugging Face Specialized Models',
+                    'description': 'ViT AI-detector, AI vs Human Detector, WildFakeDetector',
+                    'is_ai_generated': results.get('method_4', {}).get('is_ai_generated', False) if 'method_4' in results else None,
+                    'confidence': results.get('method_4', {}).get('confidence', 0.0) if 'method_4' in results else None,
+                    'indicators': results.get('method_4', {}).get('indicators', []) if 'method_4' in results else ['Not available'],
+                    'available': self.huggingface_ensemble is not None and len(self.huggingface_ensemble.models) > 0 if self.huggingface_ensemble else False
+                },
                 'analysis_details': {
                     'all_methods': results,
                     'best_method': weighted_result['method_id'],
@@ -381,6 +422,15 @@ class ThreeMethodDetectionService:
                             'confidence': method_3_result['confidence'],
                             'indicators': method_3_result['indicators'],
                             'available': True
+                        },
+                        'method_4': {
+                            'name': 'Hugging Face Specialized Models',
+                            'description': 'ViT AI-detector, AI vs Human Detector, WildFakeDetector',
+                            'is_ai_generated': results.get('method_4', {}).get('is_ai_generated', False) if 'method_4' in results else None,
+                            'confidence': results.get('method_4', {}).get('confidence', 0.0) if 'method_4' in results else None,
+                            'indicators': results.get('method_4', {}).get('indicators', []) if 'method_4' in results else ['Not available'],
+                            'available': self.huggingface_ensemble is not None and len(self.huggingface_ensemble.models) > 0 if self.huggingface_ensemble else False,
+                            'model_predictions': results.get('method_4', {}).get('model_predictions', {})
                         },
                         'best_method': weighted_result['method_id'],
                         'agreement': agreement,
@@ -834,6 +884,50 @@ class ThreeMethodDetectionService:
                 'confidence': 0.0,
                 'indicators': [f'Method 3 error: {str(e)}'],
                 'method_id': 'method_3'
+            }
+    
+    def _method_4_huggingface(self, image: Image.Image) -> Dict[str, Any]:
+        """Method 4: Hugging Face Specialized Models Ensemble"""
+        
+        if not self.huggingface_ensemble:
+            return {
+                'is_ai_generated': False,
+                'confidence': 0.0,
+                'indicators': ['Hugging Face models not available'],
+                'method_id': 'method_4'
+            }
+        
+        try:
+            result = self.huggingface_ensemble.detect(image)
+            if 'error' not in result:
+                indicators = result['indicators'] + [
+                    "⭐ Method: Hugging Face Specialized Models",
+                    "Models: ViT AI-detector, AI vs Human Detector, WildFakeDetector",
+                    "Pre-trained on large-scale AI-generated image datasets"
+                ]
+                return {
+                    'is_ai_generated': result['is_ai_generated'],
+                    'confidence': result['confidence'],
+                    'indicators': indicators,
+                    'method_id': 'method_4',
+                    'raw_score': result['probabilities']['ai'],
+                    'model_predictions': result.get('model_predictions', {}),
+                    'models_count': result.get('models_count', 0)
+                }
+            else:
+                return {
+                    'is_ai_generated': False,
+                    'confidence': 0.0,
+                    'indicators': [f'Hugging Face ensemble error: {result["error"]}'],
+                    'method_id': 'method_4'
+                }
+        except Exception as e:
+            logger.error(f"Error in Method 4: {e}")
+            return {
+                'is_ai_generated': False,
+                'confidence': 0.0,
+                'indicators': [f'Method 4 error: {str(e)}'],
+                'method_id': 'method_4'
             }
     
     def _calculate_weighted_vote(self, results: Dict, agreement: Dict) -> Dict[str, Any]:
