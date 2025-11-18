@@ -427,14 +427,23 @@ class ThreeMethodDetectionService:
                     'agreement': self._calculate_agreement(results),
                     'performance_stats': self.method_performance.copy()
                 },
-                'method_4': {
-                    'name': 'Hugging Face Specialized Models',
-                    'description': 'Fine-Tuned: ViT AI-detector, AI vs Human Detector, AI Image Classifier' if (self.huggingface_ensemble and len(self.huggingface_ensemble.models) > 0) else 'Not available',
-                    'is_ai_generated': results.get('method_4', {}).get('is_ai_generated', False) if 'method_4' in results else None,
-                    'confidence': results.get('method_4', {}).get('confidence', 0.0) if 'method_4' in results else None,
-                    'indicators': results.get('method_4', {}).get('indicators', []) if 'method_4' in results else ['Not available'],
-                    'available': self.huggingface_ensemble is not None and len(self.huggingface_ensemble.models) > 0 if self.huggingface_ensemble else False
-                },
+                        'method_4': {
+                            'name': 'Hugging Face Specialized Models',
+                            'description': 'Fine-Tuned: ViT AI-detector, AI vs Human Detector, AI Image Classifier' if (self.huggingface_ensemble and len(self.huggingface_ensemble.models) > 0) else 'Not available',
+                            'is_ai_generated': results.get('method_4', {}).get('is_ai_generated', False) if 'method_4' in results else None,
+                            'confidence': results.get('method_4', {}).get('confidence', 0.0) if 'method_4' in results else None,
+                            'indicators': results.get('method_4', {}).get('indicators', []) if 'method_4' in results else ['Not available'],
+                            'available': self.huggingface_ensemble is not None and len(self.huggingface_ensemble.models) > 0 if self.huggingface_ensemble else False
+                        },
+                        'method_5': {
+                            'name': 'Enterprise Models Ensemble',
+                            'description': 'Industry-proven: Hive-style CNN, Reality Defender (Swin), CLIP-based' if (self.enterprise_ensemble and len(self.enterprise_ensemble.models) > 0) else 'Not available',
+                            'is_ai_generated': results.get('method_5', {}).get('is_ai_generated', False) if 'method_5' in results else None,
+                            'confidence': results.get('method_5', {}).get('confidence', 0.0) if 'method_5' in results else None,
+                            'indicators': results.get('method_5', {}).get('indicators', []) if 'method_5' in results else ['Not available'],
+                            'available': self.enterprise_ensemble is not None and len(self.enterprise_ensemble.models) > 0 if self.enterprise_ensemble else False,
+                            'model_predictions': results.get('method_5', {}).get('model_predictions', {})
+                        },
                 'analysis_details': {
                     'all_methods': results,
                     'best_method': weighted_result['method_id'],
@@ -473,6 +482,15 @@ class ThreeMethodDetectionService:
                             'indicators': results.get('method_4', {}).get('indicators', []) if 'method_4' in results else ['Not available'],
                             'available': self.huggingface_ensemble is not None and len(self.huggingface_ensemble.models) > 0 if self.huggingface_ensemble else False,
                             'model_predictions': results.get('method_4', {}).get('model_predictions', {})
+                        },
+                        'method_5': {
+                            'name': 'Enterprise Models Ensemble',
+                            'description': 'Industry-proven: Hive-style CNN, Reality Defender (Swin), CLIP-based' if (self.enterprise_ensemble and len(self.enterprise_ensemble.models) > 0) else 'Not available',
+                            'is_ai_generated': results.get('method_5', {}).get('is_ai_generated', False) if 'method_5' in results else None,
+                            'confidence': results.get('method_5', {}).get('confidence', 0.0) if 'method_5' in results else None,
+                            'indicators': results.get('method_5', {}).get('indicators', []) if 'method_5' in results else ['Not available'],
+                            'available': self.enterprise_ensemble is not None and len(self.enterprise_ensemble.models) > 0 if self.enterprise_ensemble else False,
+                            'model_predictions': results.get('method_5', {}).get('model_predictions', {})
                         },
                         'best_method': weighted_result['method_id'],
                         'agreement': agreement,
