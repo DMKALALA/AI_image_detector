@@ -107,10 +107,12 @@ def require_api_key(request) -> Tuple[bool, Optional[JsonResponse]]:
     # Get API key from environment or settings
     expected_api_key = os.environ.get('API_KEY') or getattr(settings, 'API_KEY', None)
     
-    # If no API key is configured, allow access (development mode)
+    # If no API key is configured, fail closed
     if not expected_api_key:
-        logger.warning("API_KEY not configured - allowing unauthenticated access")
-        return True, None
+        logger.error("API_KEY not configured - refusing unauthenticated access")
+        return False, JsonResponse({
+            'error': 'API key required and not configured on server'
+        }, status=503)
     
     # Check for API key in header
     api_key = request.headers.get('X-API-Key') or request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -126,4 +128,3 @@ def require_api_key(request) -> Tuple[bool, Optional[JsonResponse]]:
         }, status=403)
     
     return True, None
-

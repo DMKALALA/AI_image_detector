@@ -64,56 +64,65 @@ else:
     transforms = None
     models = None
 
-# Import modern ensemble method
-try:
-    from detector.modern_ensemble_method import ModernEnsembleService
-    MODERN_ENSEMBLE_AVAILABLE = True
-    logger.info("✓ Modern ensemble module imported successfully")
-except ImportError as e:
+if ENABLE_MODEL_IMPORTS and TORCH_AVAILABLE:
+    # Import modern ensemble method
+    try:
+        from detector.modern_ensemble_method import ModernEnsembleService
+        MODERN_ENSEMBLE_AVAILABLE = True
+        logger.info("✓ Modern ensemble module imported successfully")
+    except ImportError as e:
+        MODERN_ENSEMBLE_AVAILABLE = False
+        logger.warning(f"Could not import modern ensemble module: {e}")
+
+    # Import improved methods
+    try:
+        from detector.improved_method_1_deeplearning import ImprovedDeepLearningMethod1
+        IMPROVED_METHOD_1_AVAILABLE = True
+        logger.info("✓ Improved Method 1 (Deep Learning) module imported successfully")
+    except ImportError as e:
+        IMPROVED_METHOD_1_AVAILABLE = False
+        logger.warning(f"Could not import improved Method 1: {e}")
+
+    try:
+        from detector.advanced_spectral_method3 import AdvancedSpectralMethod3
+        ADVANCED_SPECTRAL_METHOD_3_AVAILABLE = True
+        logger.info("✓ Advanced Spectral Method 3 module imported successfully")
+    except ImportError as e:
+        ADVANCED_SPECTRAL_METHOD_3_AVAILABLE = False
+        logger.warning(f"Could not import Advanced Spectral Method 3: {e}")
+
+    # Keep forensics as optional fallback
+    try:
+        from detector.improved_method_3_forensics import ImprovedForensicsMethod3
+        IMPROVED_METHOD_3_AVAILABLE = True
+    except ImportError:
+        IMPROVED_METHOD_3_AVAILABLE = False
+
+    # Hugging Face specialized models ensemble
+    try:
+        from detector.huggingface_models import HuggingFaceEnsemble
+        HUGGINGFACE_AVAILABLE = True
+        logger.info("✓ Hugging Face models module imported successfully")
+    except ImportError as e:
+        HUGGINGFACE_AVAILABLE = False
+        logger.warning(f"Could not import Hugging Face models: {e}")
+
+    # Enterprise models ensemble (Hive, Reality Defender, Sensity, CLIP)
+    try:
+        from detector.enterprise_models import EnterpriseModelsEnsemble
+        ENTERPRISE_MODELS_AVAILABLE = True
+        logger.info("✓ Enterprise models module imported successfully")
+    except ImportError as e:
+        ENTERPRISE_MODELS_AVAILABLE = False
+        logger.warning(f"Could not import Enterprise models: {e}")
+else:
     MODERN_ENSEMBLE_AVAILABLE = False
-    logger.warning(f"Could not import modern ensemble module: {e}")
-
-# Import improved methods
-try:
-    from detector.improved_method_1_deeplearning import ImprovedDeepLearningMethod1
-    IMPROVED_METHOD_1_AVAILABLE = True
-    logger.info("✓ Improved Method 1 (Deep Learning) module imported successfully")
-except ImportError as e:
     IMPROVED_METHOD_1_AVAILABLE = False
-    logger.warning(f"Could not import improved Method 1: {e}")
-
-try:
-    from detector.advanced_spectral_method3 import AdvancedSpectralMethod3
-    ADVANCED_SPECTRAL_METHOD_3_AVAILABLE = True
-    logger.info("✓ Advanced Spectral Method 3 module imported successfully")
-except ImportError as e:
     ADVANCED_SPECTRAL_METHOD_3_AVAILABLE = False
-    logger.warning(f"Could not import Advanced Spectral Method 3: {e}")
-
-# Keep forensics as optional fallback
-try:
-    from detector.improved_method_3_forensics import ImprovedForensicsMethod3
-    IMPROVED_METHOD_3_AVAILABLE = True
-except ImportError:
     IMPROVED_METHOD_3_AVAILABLE = False
-
-# Hugging Face specialized models ensemble
-try:
-    from detector.huggingface_models import HuggingFaceEnsemble
-    HUGGINGFACE_AVAILABLE = True
-    logger.info("✓ Hugging Face models module imported successfully")
-except ImportError as e:
     HUGGINGFACE_AVAILABLE = False
-    logger.warning(f"Could not import Hugging Face models: {e}")
-
-# Enterprise models ensemble (Hive, Reality Defender, Sensity, CLIP)
-try:
-    from detector.enterprise_models import EnterpriseModelsEnsemble
-    ENTERPRISE_MODELS_AVAILABLE = True
-    logger.info("✓ Enterprise models module imported successfully")
-except ImportError as e:
     ENTERPRISE_MODELS_AVAILABLE = False
-    logger.warning(f"Could not import Enterprise models: {e}")
+    logger.info("Skipping optional model imports (ENABLE_MODEL_IMPORTS=0 or PyTorch unavailable)")
 
 # Feedback-based learning system
 try:
