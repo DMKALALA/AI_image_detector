@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import ImageUpload
 from .forms import ImageUploadForm
@@ -23,7 +24,11 @@ def home(request):
             
             # Perform AI detection using comparative service
             try:
-                result = get_detection_service().detect_ai_image(image_upload.image.path)
+                detection_service = get_detection_service()
+                if detection_service is None:
+                    messages.error(request, 'Detection service is not available. PyTorch imports are disabled (ENABLE_MODEL_IMPORTS=0).')
+                    return redirect('detector:home')
+                result = detection_service.detect_ai_image(image_upload.image.path)
                 
                 if 'error' not in result:
                     image_upload.is_ai_generated = result['is_ai_generated']
@@ -64,6 +69,7 @@ def result(request, pk):
         messages.error(request, 'Image not found')
         return redirect('detector:home')
 
+@csrf_exempt
 def api_detect(request):
     """API endpoint for AI image detection (requires API key)"""
     if request.method != 'POST':
@@ -95,24 +101,34 @@ def api_detect(request):
     image_upload = form.save()
     
     try:
-        result = get_detection_service().detect_ai_image(image_upload.image.path)
+        detection_service = get_detection_service()
+        if detection_service is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Detection service is not available. PyTorch imports are disabled (ENABLE_MODEL_IMPORTS=0).'
+            }, status=503)
+        result = detection_service.detect_ai_image(image_upload.image.path)
         
-        if 'error' not in result:
-            image_upload.is_ai_generated = result['is_ai_generated']
-            image_upload.confidence_score = result['confidence']
-            image_upload.detection_indicators = result['indicators']
-            image_upload.analysis_details = result['analysis_details']
-            image_upload.ai_caption = result.get('caption', '')
-            image_upload.save()
-        
+        if 'error' in result:
+            return JsonResponse({
+                'success': False,
+                'error': result['error']
+            }, status=500)
+
+        image_upload.is_ai_generated = result['is_ai_generated']
+        image_upload.confidence_score = result['confidence']
+        image_upload.detection_indicators = result['indicators']
+        image_upload.analysis_details = result['analysis_details']
+        image_upload.ai_caption = result.get('caption', '')
+        image_upload.save()
+    
         return JsonResponse({
             'success': True,
             'image_id': image_upload.pk,
             'is_ai_generated': result.get('is_ai_generated', False),
             'confidence': result.get('confidence', 0.0),
             'indicators': result.get('indicators', []),
-            'caption': result.get('caption', ''),
-            'error': result.get('error', None)
+            'caption': result.get('caption', '')
         })
     except Exception as e:
         logger.error(f"API detection error: {e}")
@@ -256,7 +272,15 @@ def batch_upload(request):
                 image_upload.save()
                 
                 # Perform AI detection using comparative service
-                result = get_detection_service().detect_ai_image(image_upload.image.path)
+                detection_service = get_detection_service()
+                if detection_service is None:
+                    results.append({
+                        'filename': file.name,
+                        'error': 'Detection service is not available. PyTorch imports are disabled (ENABLE_MODEL_IMPORTS=0).',
+                        'success': False
+                    })
+                    continue
+                result = detection_service.detect_ai_image(image_upload.image.path)
                 
                 if 'error' not in result:
                     image_upload.is_ai_generated = result['is_ai_generated']
@@ -341,7 +365,7 @@ def individual_results(request):
     # Apply search
     if search_query:
         queryset = queryset.filter(
-            Q(filename__icontains=search_query) |
+            Q(image__icontains=search_query) |
             Q(method__icontains=search_query) |
             Q(detection_indicators__icontains=search_query)
         )
@@ -470,6 +494,7 @@ def analytics_dashboard(request):
     
     return render(request, 'detector/analytics_dashboard.html', context)
 
+@csrf_exempt
 def api_detect_realtime(request):
     """Real-time API endpoint for image detection (requires API key)"""
     if request.method != 'POST':
@@ -501,7 +526,16 @@ def api_detect_realtime(request):
         
         try:
             # Perform detection using comparative service
-            result = get_detection_service().detect_ai_image(tmp_path)
+            detection_service = get_detection_service()
+            if detection_service is None:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Detection service is not available. PyTorch imports are disabled (ENABLE_MODEL_IMPORTS=0).'
+                }, status=503)
+            result = detection_service.detect_ai_image(tmp_path)
+            
+            if 'error' in result:
+                return JsonResponse({'error': result['error']}, status=500)
             
             # Return result
             return JsonResponse({
@@ -523,6 +557,7 @@ def api_detect_realtime(request):
             'error': str(e)
         }, status=500)
 
+@csrf_exempt
 def api_batch_detect(request):
     """API endpoint for batch image detection (requires API key)"""
     if request.method != 'POST':
@@ -567,16 +602,31 @@ def api_batch_detect(request):
                 
                 try:
                     # Perform detection using comparative service
-                    result = get_detection_service().detect_ai_image(tmp_path)
+                    detection_service = get_detection_service()
+                    if detection_service is None:
+                        results.append({
+                            'filename': file.name,
+                            'success': False,
+                            'error': 'Detection service is not available. PyTorch imports are disabled (ENABLE_MODEL_IMPORTS=0).'
+                        })
+                        continue
+                    result = detection_service.detect_ai_image(tmp_path)
                     
-                    results.append({
-                        'filename': file.name,
-                        'success': True,
-                        'is_ai_generated': result['is_ai_generated'],
-                        'confidence': result['confidence'],
-                        'method': result['method'],
-                        'indicators': result['indicators']
-                    })
+                    if 'error' in result:
+                        results.append({
+                            'filename': file.name,
+                            'success': False,
+                            'error': result['error']
+                        })
+                    else:
+                        results.append({
+                            'filename': file.name,
+                            'success': True,
+                            'is_ai_generated': result['is_ai_generated'],
+                            'confidence': result['confidence'],
+                            'method': result['method'],
+                            'indicators': result['indicators']
+                        })
                     
                 finally:
                     os.unlink(tmp_path)
@@ -604,6 +654,14 @@ def api_status(request):
     """API status endpoint"""
     try:
         detection_service = get_detection_service()
+        if detection_service is None:
+            return JsonResponse({
+                'status': 'unavailable',
+                'trained_model_available': False,
+                'device': 'N/A',
+                'message': 'Detection service is not available. PyTorch imports are disabled (ENABLE_MODEL_IMPORTS=0).',
+                'timestamp': timezone.now().isoformat()
+            })
         # Check if trained model is available
         has_trained_model = detection_service.trained_model is not None
         

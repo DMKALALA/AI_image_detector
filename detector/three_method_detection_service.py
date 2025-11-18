@@ -26,9 +26,6 @@ Each method provides independent results for direct comparison.
 import os
 import json
 import numpy as np
-import torch
-import torch.nn as nn
-from torchvision import transforms, models
 from PIL import Image, ExifTags
 import cv2
 from scipy import fft
@@ -38,6 +35,34 @@ from typing import Dict, List, Tuple, Any
 from collections import Counter
 
 logger = logging.getLogger(__name__)
+
+# Conditional PyTorch imports - skip in test environments without SHM
+ENABLE_MODEL_IMPORTS = os.environ.get("ENABLE_MODEL_IMPORTS", "1") == "1"
+TORCH_AVAILABLE = False
+TORCH_IMPORT_ERROR = None
+
+if ENABLE_MODEL_IMPORTS:
+    try:
+        import torch
+        import torch.nn as nn
+        from torchvision import transforms, models
+        TORCH_AVAILABLE = True
+        logger.info("✓ PyTorch imported successfully")
+    except Exception as e:
+        TORCH_AVAILABLE = False
+        TORCH_IMPORT_ERROR = str(e)
+        logger.warning(f"PyTorch import skipped (ENABLE_MODEL_IMPORTS=0 or import failed): {e}")
+        # Create dummy classes for type hints
+        torch = None
+        nn = None
+        transforms = None
+        models = None
+else:
+    logger.info("PyTorch imports disabled (ENABLE_MODEL_IMPORTS=0)")
+    torch = None
+    nn = None
+    transforms = None
+    models = None
 
 # Import modern ensemble method
 try:
@@ -106,9 +131,15 @@ class ThreeMethodDetectionService:
     """
     
     def __init__(self):
+        # Check if PyTorch is available
+        if not TORCH_AVAILABLE:
+            raise RuntimeError(
+                "PyTorch is not available. Set ENABLE_MODEL_IMPORTS=1 to enable model imports. "
+                f"Original error: {TORCH_IMPORT_ERROR}"
+            )
+        
         # Force CPU mode for free tier (512MB limit) - CUDA models use too much memory
         # Check if we're on a memory-constrained environment
-        import os
         force_cpu = os.environ.get('FORCE_CPU', 'true').lower() == 'true'
         if force_cpu:
             self.device = torch.device('cpu')
@@ -1280,10 +1311,24 @@ def get_detection_service():
     
     Models are loaded only on first detection request, not at startup.
     This prevents worker timeouts during deployment.
+    
+    In test environments with ENABLE_MODEL_IMPORTS=0, returns None
+    to allow tests to run without PyTorch.
     """
     global _service_instance
     if _service_instance is None:
-        _service_instance = ThreeMethodDetectionService()
+        if not TORCH_AVAILABLE:
+            logger.warning(
+                "PyTorch not available (ENABLE_MODEL_IMPORTS=0). "
+                "Detection service cannot be initialized. "
+                "This is expected in test environments without shared memory."
+            )
+            return None
+        try:
+            _service_instance = ThreeMethodDetectionService()
+        except Exception as e:
+            logger.error(f"Failed to initialize detection service: {e}", exc_info=True)
+            raise
     return _service_instance
 
 # Module-level instance for backward compatibility
