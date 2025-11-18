@@ -203,18 +203,18 @@ class ThreeMethodDetectionService:
         # Method 1: 56.7% accuracy - BEST performer
         # Method 2: 40% accuracy - has 17 false positives
         default_weights = {
-            'method_1': 0.35,  # 56.7% accuracy - reduce to make room for Method 4
-            'method_2': 0.30,  # 40% accuracy - reduce weight due to false positives
-            'method_3': 0.10,  # 33.3% accuracy - WORST, reduce drastically (was 20%)
-            'method_4': 0.25   # NEW: Hugging Face specialized models - strong expected performance
+            'method_1': 0.30,  # Deep Learning - good baseline
+            'method_2': 0.30,  # Statistical - reliable patterns
+            'method_3': 0.05,  # Spectral - REDUCED (overconfident, 100% confidence issue)
+            'method_4': 0.35   # HuggingFace - BOOSTED (3 fine-tuned models @ 100% val accuracy)
         }
         
         # Default confidence calibration
         default_calibration = {
             'method_1': 0.8,   # Improved Method 1 - conservative start, adjust after testing
             'method_2': 1.0,   # Method 2 has excellent calibration - no adjustment needed
-            'method_3': 0.7,   # Improved Method 3 - conservative start, should be more reliable than old
-            'method_4': 0.95   # Hugging Face models - pre-trained specialists, expect good calibration
+            'method_3': 0.5,   # REDUCED from 0.7 - Method 3 shows 100% confidence, needs major reduction
+            'method_4': 0.95   # Hugging Face models - fine-tuned specialists, expect good calibration
         }
         
         # Try to load saved weights from adaptive learning
@@ -387,7 +387,7 @@ class ThreeMethodDetectionService:
                 },
                 'method_4': {
                     'name': 'Hugging Face Specialized Models',
-                    'description': 'ViT AI-detector, AI vs Human Detector, WildFakeDetector',
+                    'description': 'Fine-Tuned: ViT AI-detector, AI vs Human Detector, AI Image Classifier' if (self.huggingface_ensemble and len(self.huggingface_ensemble.models) > 0) else 'Not available',
                     'is_ai_generated': results.get('method_4', {}).get('is_ai_generated', False) if 'method_4' in results else None,
                     'confidence': results.get('method_4', {}).get('confidence', 0.0) if 'method_4' in results else None,
                     'indicators': results.get('method_4', {}).get('indicators', []) if 'method_4' in results else ['Not available'],
@@ -425,7 +425,7 @@ class ThreeMethodDetectionService:
                         },
                         'method_4': {
                             'name': 'Hugging Face Specialized Models',
-                            'description': 'ViT AI-detector, AI vs Human Detector, WildFakeDetector',
+                            'description': 'Fine-Tuned: ViT AI-detector, AI vs Human Detector, AI Image Classifier' if (self.huggingface_ensemble and len(self.huggingface_ensemble.models) > 0) else 'Not available',
                             'is_ai_generated': results.get('method_4', {}).get('is_ai_generated', False) if 'method_4' in results else None,
                             'confidence': results.get('method_4', {}).get('confidence', 0.0) if 'method_4' in results else None,
                             'indicators': results.get('method_4', {}).get('indicators', []) if 'method_4' in results else ['Not available'],

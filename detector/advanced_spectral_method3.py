@@ -137,13 +137,14 @@ class AdvancedSpectralMethod3:
             normalized_score = max(0.0, min(1.0, (ai_score + 0.59) / 1.67))
             
             # Calculate confidence based on factor agreement
+            # CRITICAL: Method 3 was showing 100% confidence - MAJOR CALIBRATION FIX
             if confidences:
                 avg_confidence = np.mean(confidences)
-                # Boost if multiple factors agree
+                # REDUCED boost - was too aggressive (1.12 → 1.05, 1.08 → 1.03)
                 if len(factors) >= 3:
-                    confidence_boost = 1.12
+                    confidence_boost = 1.05  # Was 1.12
                 elif len(factors) >= 2:
-                    confidence_boost = 1.08
+                    confidence_boost = 1.03  # Was 1.08
                 else:
                     confidence_boost = 1.0
                 base_confidence = avg_confidence * confidence_boost
@@ -162,7 +163,12 @@ class AdvancedSpectralMethod3:
                 threshold = 0.60  # RAISED from 0.35 to 0.60
             
             is_ai_generated = normalized_score > threshold
-            confidence = min(1.0, base_confidence * (1 + abs(normalized_score - 0.5)))
+            
+            # CRITICAL FIX: Confidence calculation was reaching 100% - cap it much lower
+            # Old formula: min(1.0, base_confidence * (1 + abs(normalized_score - 0.5)))
+            # New formula: Much more conservative
+            confidence_multiplier = 1 + (abs(normalized_score - 0.5) * 0.5)  # Was 1.0, now 0.5
+            confidence = min(0.85, base_confidence * confidence_multiplier * 0.7)  # Cap at 85%, reduce by 30%
             
             if not factors:
                 indicators.append("Spectral analysis: No strong patterns detected")
