@@ -120,17 +120,121 @@
             </div>
         </div>
         
-        <!-- Three-Method Comparison Section -->
+        <!-- Four-Model Comparison Section -->
         {% if image_upload.analysis_details and image_upload.analysis_details.method_comparison and image_upload.analysis_details.method_comparison.method_1 %}
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card result-card">
                     <div class="card-header bg-secondary text-white">
-                        <h4 class="mb-0"><i class="fas fa-balance-scale"></i> Three-Method Comparison Analysis</h4>
-                        <small class="text-white-50">Compare results from three different detection methodologies</small>
+                        <h4 class="mb-0"><i class="fas fa-balance-scale"></i> Multi-Model Comparison Analysis</h4>
+                        <small class="text-white-50">Compare results from all detection models (Deep Learning + Statistical + Forensics + HuggingFace Specialists)</small>
                     </div>
                     <div class="card-body">
                         {% with comparison=image_upload.analysis_details.method_comparison %}
+                        
+                        <!-- Quick Stats Table -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5>🎯 Model Predictions at a Glance</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Model</th>
+                                                <th>Prediction</th>
+                                                <th>Confidence</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if comparison.method_1.available %}
+                                            <tr>
+                                                <td><strong>Method 1:</strong> {{ comparison.method_1.name }}</td>
+                                                <td>
+                                                    <span class="badge {% if comparison.method_1.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}">
+                                                        {% if comparison.method_1.is_ai_generated %}AI-Generated{% else %}Real{% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 25px;">
+                                                        <div class="progress-bar {% if comparison.method_1.confidence > 0.7 %}bg-success{% elif comparison.method_1.confidence > 0.4 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                             role="progressbar" 
+                                                             style="width: {{ comparison.method_1.confidence|floatformat:2|mul:100 }}%">
+                                                            {{ comparison.method_1.confidence|floatformat:2|mul:100 }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><small class="text-muted">{{ comparison.method_1.description|truncatewords:8 }}</small></td>
+                                            </tr>
+                                            {% endif %}
+                                            
+                                            {% if comparison.method_2.available %}
+                                            <tr>
+                                                <td><strong>Method 2:</strong> {{ comparison.method_2.name }}</td>
+                                                <td>
+                                                    <span class="badge {% if comparison.method_2.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}">
+                                                        {% if comparison.method_2.is_ai_generated %}AI-Generated{% else %}Real{% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 25px;">
+                                                        <div class="progress-bar {% if comparison.method_2.confidence > 0.7 %}bg-success{% elif comparison.method_2.confidence > 0.4 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                             role="progressbar" 
+                                                             style="width: {{ comparison.method_2.confidence|floatformat:2|mul:100 }}%">
+                                                            {{ comparison.method_2.confidence|floatformat:2|mul:100 }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><small class="text-muted">{{ comparison.method_2.description|truncatewords:8 }}</small></td>
+                                            </tr>
+                                            {% endif %}
+                                            
+                                            {% if comparison.method_3.available %}
+                                            <tr>
+                                                <td><strong>Method 3:</strong> {{ comparison.method_3.name }}</td>
+                                                <td>
+                                                    <span class="badge {% if comparison.method_3.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}">
+                                                        {% if comparison.method_3.is_ai_generated %}AI-Generated{% else %}Real{% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 25px;">
+                                                        <div class="progress-bar {% if comparison.method_3.confidence > 0.7 %}bg-success{% elif comparison.method_3.confidence > 0.4 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                             role="progressbar" 
+                                                             style="width: {{ comparison.method_3.confidence|floatformat:2|mul:100 }}%">
+                                                            {{ comparison.method_3.confidence|floatformat:2|mul:100 }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><small class="text-muted">{{ comparison.method_3.description|truncatewords:8 }}</small></td>
+                                            </tr>
+                                            {% endif %}
+                                            
+                                            {% if comparison.method_4 and comparison.method_4.available %}
+                                            <tr class="table-info">
+                                                <td><strong>⭐ Method 4:</strong> {{ comparison.method_4.name }}</td>
+                                                <td>
+                                                    <span class="badge {% if comparison.method_4.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}">
+                                                        {% if comparison.method_4.is_ai_generated %}AI-Generated{% else %}Real{% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 25px;">
+                                                        <div class="progress-bar {% if comparison.method_4.confidence > 0.7 %}bg-success{% elif comparison.method_4.confidence > 0.4 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                             role="progressbar" 
+                                                             style="width: {{ comparison.method_4.confidence|floatformat:2|mul:100 }}%">
+                                                            {{ comparison.method_4.confidence|floatformat:2|mul:100 }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><small class="text-muted">{{ comparison.method_4.description }}</small></td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                         
                         <!-- Method Agreement Summary -->
                         <div class="row mb-4">

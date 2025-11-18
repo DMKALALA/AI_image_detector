@@ -26,22 +26,35 @@ class HuggingFaceEnsemble:
     Ensemble of specialized Hugging Face models for AI image detection
     """
     
-    def __init__(self, device=None):
+    def __init__(self, device=None, use_finetuned=True):
         self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.models = {}
         self.processors = {}
+        self.use_finetuned = use_finetuned
         
         logger.info(f"Initializing Hugging Face ensemble on {self.device}")
+        logger.info(f"Use fine-tuned models: {use_finetuned}")
         self._initialize_models()
     
     def _initialize_models(self):
         """Initialize all three Hugging Face models"""
+        import os
+        from pathlib import Path
+        
+        # Check for fine-tuned models
+        finetuned_base = Path('hf_finetuned_models')
         
         # Model 1: Vision Transformer (ViT) for AI-generated image detection
         # Common options: "dima806/deepfake_vs_real_image_detection" or similar
         try:
-            model_name_vit = "dima806/deepfake_vs_real_image_detection"
-            logger.info(f"Loading ViT AI detector: {model_name_vit}")
+            finetuned_path = finetuned_base / 'vit_ai_detector_finetuned'
+            
+            if self.use_finetuned and finetuned_path.exists():
+                model_name_vit = str(finetuned_path)
+                logger.info(f"Loading FINE-TUNED ViT AI detector from: {model_name_vit}")
+            else:
+                model_name_vit = "dima806/deepfake_vs_real_image_detection"
+                logger.info(f"Loading pre-trained ViT AI detector: {model_name_vit}")
             
             self.processors['vit_ai_detector'] = ViTImageProcessor.from_pretrained(model_name_vit)
             self.models['vit_ai_detector'] = ViTForImageClassification.from_pretrained(model_name_vit)
@@ -55,8 +68,14 @@ class HuggingFaceEnsemble:
         # Model 2: AI vs Human Image Detector
         # Look for models like "Organika/sdxl-detector" or "umm-maybe/AI-image-detector"
         try:
-            model_name_ai_human = "umm-maybe/AI-image-detector"
-            logger.info(f"Loading AI vs Human detector: {model_name_ai_human}")
+            finetuned_path = finetuned_base / 'ai_human_detector_finetuned'
+            
+            if self.use_finetuned and finetuned_path.exists():
+                model_name_ai_human = str(finetuned_path)
+                logger.info(f"Loading FINE-TUNED AI vs Human detector from: {model_name_ai_human}")
+            else:
+                model_name_ai_human = "umm-maybe/AI-image-detector"
+                logger.info(f"Loading pre-trained AI vs Human detector: {model_name_ai_human}")
             
             self.processors['ai_human_detector'] = AutoFeatureExtractor.from_pretrained(model_name_ai_human)
             self.models['ai_human_detector'] = AutoModelForImageClassification.from_pretrained(model_name_ai_human)
@@ -70,8 +89,14 @@ class HuggingFaceEnsemble:
         # Model 3: WildFakeDetector
         # Look for models trained on diverse datasets like "Aaditya2763/wild-fake-detector"
         try:
-            model_name_wildfake = "Aaditya2763/wild-fake-detector"
-            logger.info(f"Loading WildFakeDetector: {model_name_wildfake}")
+            finetuned_path = finetuned_base / 'wildfake_detector_finetuned'
+            
+            if self.use_finetuned and finetuned_path.exists():
+                model_name_wildfake = str(finetuned_path)
+                logger.info(f"Loading FINE-TUNED WildFakeDetector from: {model_name_wildfake}")
+            else:
+                model_name_wildfake = "Aaditya2763/wild-fake-detector"
+                logger.info(f"Loading pre-trained WildFakeDetector: {model_name_wildfake}")
             
             self.processors['wildfake_detector'] = AutoFeatureExtractor.from_pretrained(model_name_wildfake)
             self.models['wildfake_detector'] = AutoModelForImageClassification.from_pretrained(model_name_wildfake)
