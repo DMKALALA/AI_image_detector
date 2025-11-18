@@ -1,6 +1,8 @@
 # AI Image Detector
 
-A Django web application that uses artificial intelligence to detect whether images are AI-generated or real/human-created. Built with Django, PyTorch, and the BLIP (Bootstrapping Language-Image Pre-training) model from Hugging Face Transformers.
+A production-ready Django web application that uses an ensemble of 5 advanced AI detection methods to identify whether images are AI-generated or real/human-created. Built with Django, PyTorch, and multiple state-of-the-art models from Hugging Face Transformers.
+
+**Status**: ✅ Production-ready with comprehensive security hardening
 
 ## 🌐 Live Demo
 
@@ -74,43 +76,76 @@ A Django web application that uses artificial intelligence to detect whether ima
 
 ## API Endpoints
 
+All API endpoints require authentication via API key. Set `API_KEY` environment variable.
+
 - `GET /` - Home page with upload form
-- `POST /` - Upload and analyze image
+- `POST /` - Upload and analyze image (web form, CSRF protected)
 - `GET /result/<id>/` - View detection results
-- `POST /api/detect/` - API endpoint for programmatic access
+- `POST /api/detect/` - API endpoint for programmatic access (requires API key)
+- `POST /api/detect/realtime/` - Real-time detection API (requires API key)
+- `POST /api/detect/batch/` - Batch detection API (max 10 images, requires API key)
+- `GET /api/status/` - API status and health check
+- `GET /api/stats/` - Detection statistics
+- `POST /feedback/<image_id>/` - Submit user feedback (CSRF protected)
+
+**API Authentication:**
+```bash
+# Set API key
+export API_KEY=your-secret-api-key
+
+# Use in requests
+curl -X POST \
+  -H "X-API-Key: your-secret-api-key" \
+  -F "image=@image.jpg" \
+  http://localhost:8000/api/detect/
+```
 
 ## How It Works
 
-The AI detection system uses multiple analysis methods:
+The AI detection system uses **5 advanced detection methods** with weighted ensemble voting:
 
-1. **Image Characteristics Analysis**: 
-   - Checks for perfect symmetry (common in AI art)
-   - Analyzes unusual color patterns
-   - Detects overly perfect details
-   - Identifies common AI generation artifacts
+1. **Method 1: Deep Learning (EfficientNet/ViT/ResNet)**
+   - State-of-the-art neural network classifiers
+   - Trained on large-scale AI/real image datasets
+   - High accuracy for modern AI generators
 
-2. **AI Model Analysis**: 
-   - Uses BLIP model to generate image captions
-   - Analyzes content for AI-related keywords
-   - Provides contextual understanding
+2. **Method 2: Statistical Pattern Analysis**
+   - Analyzes pixel-level statistical patterns
+   - Detects frequency domain artifacts
+   - Identifies compression inconsistencies
 
-3. **Metadata Analysis**: 
-   - Examines file metadata for AI software signatures
-   - Checks file size and format characteristics
-   - Looks for generation tool indicators
+3. **Method 3: Advanced Spectral & Forensics**
+   - Frequency domain analysis (FFT, DCT)
+   - Detects AI generation artifacts
+   - Metadata and file structure analysis
 
-4. **Combined Scoring**: 
-   - Weights different analysis methods
-   - Provides confidence scores
-   - Returns specific detection indicators
+4. **Method 4: HuggingFace Specialist Models**
+   - Vision Transformer AI-image-detector
+   - AI vs Human Image Detector
+   - Fine-tuned on GenImage dataset
+
+5. **Method 5: Enterprise-Grade Models**
+   - Hive-style CNN classifiers
+   - Reality Defender-style transformers
+   - CLIP-based semantic inconsistency detection
+
+**Ensemble Voting:**
+- Weighted voting combines all 5 methods
+- Confidence calibration for each method
+- Adaptive thresholds based on agreement
+- Feedback-based learning for continuous improvement
 
 ## Model Information
 
-The application uses the **BLIP (Bootstrapping Language-Image Pre-training)** model:
-- **Purpose**: Image captioning and visual question answering
-- **Provider**: Salesforce Research
-- **Framework**: Hugging Face Transformers
-- **Capabilities**: Understands both visual and textual information
+The application uses an **ensemble of 5 detection methods**:
+
+- **Method 1**: Deep Learning models (EfficientNet, Vision Transformers, ResNet)
+- **Method 2**: Statistical pattern analysis algorithms
+- **Method 3**: Advanced spectral and forensic analysis
+- **Method 4**: HuggingFace specialist models (ViT AI-detector, AI/Human classifier)
+- **Method 5**: Enterprise-grade models (Hive-style, Reality Defender-style, CLIP-based)
+
+All models are fine-tuned on the GenImage dataset for optimal performance. See `docs/FINE_TUNING_GUIDE.md` for training details.
 
 ## File Structure
 
@@ -182,22 +217,48 @@ Modify the CSS in `detector/templates/detector/base.html` to customize the appea
 - **Memory Usage**: ~2-4GB RAM recommended for smooth operation
 - **Storage**: Each uploaded image is stored locally in the `media/` directory
 
-## Security Considerations
+## Security Features
 
-- This is a development setup - not suitable for production without additional security measures
-- File uploads should be validated and sanitized in production
-- Consider implementing user authentication for multi-user scenarios
-- Set up proper file storage (e.g., AWS S3) for production deployments
+✅ **Production-Ready Security Implemented:**
 
-## Future Enhancements
+- ✅ **File Upload Validation**: Comprehensive validation (size, MIME type, extension, content verification)
+- ✅ **Filename Sanitization**: Prevents path traversal and injection attacks
+- ✅ **API Authentication**: All API endpoints require API key authentication
+- ✅ **CSRF Protection**: Web forms protected with Django CSRF middleware
+- ✅ **Image Content Verification**: PIL-based validation prevents corrupted/malicious files
+- ✅ **Dimension Limits**: Prevents decompression bomb attacks
+- ✅ **Error Handling**: Secure error messages without information leakage
 
+**Production Setup:**
+1. Set `DEBUG=False` in production
+2. Set `SECRET_KEY` environment variable
+3. Set `API_KEY` environment variable for API authentication
+4. Configure `ALLOWED_HOSTS` properly
+5. Use HTTPS in production
+6. Configure proper file storage (e.g., AWS S3, Azure Blob)
+
+See `docs/SECURITY.md` for complete security documentation.
+
+## Features & Capabilities
+
+✅ **Implemented:**
+- ✅ 5-method ensemble detection system
+- ✅ Batch image processing (up to 10 images)
+- ✅ API endpoints with authentication
+- ✅ User feedback system
+- ✅ Adaptive learning from feedback
+- ✅ Comprehensive security hardening
+- ✅ Production-ready file validation
+- ✅ Analytics dashboard
+- ✅ Fine-tuning support for all models
+
+**Future Enhancements:**
 - [ ] User authentication and profiles
-- [ ] Batch image processing
-- [ ] More sophisticated AI detection models
-- [ ] Real-time image processing with WebSockets
 - [ ] API rate limiting
-- [ ] Cloud storage integration
-- [ ] Advanced artifact detection
+- [ ] Cloud storage integration (S3, Azure Blob)
+- [ ] WebSocket-based real-time processing
+- [ ] Advanced provenance detection (C2PA, SynthID)
+- [ ] Model versioning and A/B testing
 
 ## License
 
