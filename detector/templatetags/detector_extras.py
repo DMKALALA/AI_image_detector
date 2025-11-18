@@ -14,3 +14,11 @@ def percentage(value):
         return float(value) * 100
     except (ValueError, TypeError):
         return 0
+
+@register.filter
+def mul(value, arg):
+    """Multiply value by arg"""
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return 0
