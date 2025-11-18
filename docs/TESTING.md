@@ -24,12 +24,18 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 python manage.py test detector
 ```
 
-**Option 2: With Model Imports Enabled (Requires SHM Access)**
+**Option 2: With Full Functionality (Requires SHM Access)**
+For full functionality with model imports enabled, run tests outside the SHM-constrained sandbox:
 ```bash
-# Enable model imports (default)
-export ENABLE_MODEL_IMPORTS=1
+# Set required environment variables
+export SECRET_KEY=your-secret-key-here
+export API_KEY=your-api-key-here
+export DEBUG=True
+export ENABLE_MODEL_IMPORTS=1  # Enable PyTorch imports (default)
 export OMP_NUM_THREADS=1
 export KMP_DUPLICATE_LIB_OK=TRUE
+
+# Run tests
 python manage.py test detector
 ```
 
@@ -41,9 +47,20 @@ python manage.py test detector
 
 ### Environment Variables
 
+**For Tests:**
 - `ENABLE_MODEL_IMPORTS`: Set to `0` to disable PyTorch imports (default: `1`)
+- `SECRET_KEY`: Required Django secret key
+- `API_KEY`: API key for authentication tests
+- `DEBUG`: Set to `True` for development/testing
 - `OMP_NUM_THREADS`: Set to `1` to reduce OpenMP overhead
 - `KMP_DUPLICATE_LIB_OK`: Set to `TRUE` to allow duplicate OpenMP libraries
+
+**For Production:**
+- `ENABLE_MODEL_IMPORTS`: Leave unset or set to `1` (default) to enable PyTorch models
+- `DEBUG`: Set to `False` for production
+- `SECRET_KEY`: Required - set a strong secret key
+- `ALLOWED_HOSTS`: Set to your domain(s)
+- `API_KEY`: Set for API authentication
 
 ### What Happens When ENABLE_MODEL_IMPORTS=0?
 

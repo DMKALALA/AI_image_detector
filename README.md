@@ -52,12 +52,22 @@ A production-ready Django web application that uses an ensemble of 5 advanced AI
    python manage.py createsuperuser
    ```
 
-5. **Start the development server**:
+5. **Set environment variables** (create a `.env` file or export):
+   ```bash
+   export SECRET_KEY=your-secret-key-here
+   export DEBUG=True  # Set to False for production
+   export ALLOWED_HOSTS=localhost,127.0.0.1
+   export API_KEY=your-api-key-here  # Optional for development
+   ```
+
+6. **Start the development server**:
    ```bash
    python manage.py runserver
    ```
 
-6. **Open your browser** and go to `http://127.0.0.1:8000/`
+7. **Open your browser** and go to `http://127.0.0.1:8000/`
+
+**Note:** For normal operation, leave `ENABLE_MODEL_IMPORTS` unset or set to `1` (default) so PyTorch models load properly.
 
 ## Usage
 
@@ -231,11 +241,22 @@ Modify the CSS in `detector/templates/detector/base.html` to customize the appea
 
 **Production Setup:**
 1. Set `DEBUG=False` in production
-2. Set `SECRET_KEY` environment variable
+2. Set `SECRET_KEY` environment variable (required)
 3. Set `API_KEY` environment variable for API authentication
-4. Configure `ALLOWED_HOSTS` properly
+4. Configure `ALLOWED_HOSTS` properly (comma-separated list)
 5. Use HTTPS in production
 6. Configure proper file storage (e.g., AWS S3, Azure Blob)
+7. Leave `ENABLE_MODEL_IMPORTS` unset or set to `1` (default) to enable PyTorch models
+8. Install whitenoise for static file serving: `pip install whitenoise` (already in requirements.txt)
+
+**Example Production Environment:**
+```bash
+export SECRET_KEY=your-strong-secret-key-here
+export DEBUG=False
+export ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+export API_KEY=your-api-key-here
+# ENABLE_MODEL_IMPORTS defaults to 1 (enabled) - leave unset for normal operation
+```
 
 See `docs/SECURITY.md` for complete security documentation.
 
