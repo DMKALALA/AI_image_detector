@@ -1,10 +1,48 @@
 from django.db import models
 from django.utils import timezone
 import os
+import re
+from datetime import datetime
+
+def sanitize_filename(filename):
+    """
+    Sanitize filename to prevent path traversal and injection attacks.
+    """
+    # Remove path components
+    filename = os.path.basename(filename)
+    
+    # Remove any directory separators
+    filename = filename.replace('/', '').replace('\\', '')
+    
+    # Keep only safe characters: alphanumeric, dots, hyphens, underscores
+    filename = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
+    
+    # Remove leading dots and ensure it's not empty
+    filename = filename.lstrip('.')
+    if not filename:
+        filename = 'uploaded_image'
+    
+    # Limit length
+    if len(filename) > 255:
+        name, ext = os.path.splitext(filename)
+        filename = name[:250] + ext
+    
+    return filename
 
 def upload_to(instance, filename):
-    """Generate upload path for images"""
-    return f'images/{filename}'
+    """
+    Generate secure upload path for images with sanitized filename.
+    Adds timestamp to prevent collisions.
+    """
+    # Sanitize filename
+    safe_filename = sanitize_filename(filename)
+    
+    # Add timestamp prefix to prevent collisions and ensure uniqueness
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+    name, ext = os.path.splitext(safe_filename)
+    final_filename = f"{timestamp}_{name}{ext}"
+    
+    return f'images/{final_filename}'
 
 class ImageUpload(models.Model):
     image = models.ImageField(upload_to=upload_to)

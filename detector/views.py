@@ -1,15 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from .models import ImageUpload
 from .forms import ImageUploadForm
 from .three_method_detection_service import get_detection_service
+from .security_utils import validate_image_file, sanitize_filename, require_api_key
 import os
 import json
+import logging
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 def home(request):
     """Home page with image upload form"""
@@ -62,42 +65,65 @@ def result(request, pk):
         return redirect('detector:home')
 
 def api_detect(request):
-    """API endpoint for AI image detection"""
-    if request.method == 'POST':
-        form = ImageUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            image_upload = form.save()
-            
-            try:
-                result = detection_service.detect_ai_image(image_upload.image.path)
-                
-                if 'error' not in result:
-                    image_upload.is_ai_generated = result['is_ai_generated']
-                    image_upload.confidence_score = result['confidence']
-                    image_upload.detection_indicators = result['indicators']
-                    image_upload.analysis_details = result['analysis_details']
-                    image_upload.ai_caption = result.get('caption', '')
-                    image_upload.save()
-                
-                return JsonResponse({
-                    'success': True,
-                    'image_id': image_upload.pk,
-                    'is_ai_generated': result.get('is_ai_generated', False),
-                    'confidence': result.get('confidence', 0.0),
-                    'indicators': result.get('indicators', []),
-                    'caption': result.get('caption', ''),
-                    'error': result.get('error', None)
-                })
-            except Exception as e:
-                return JsonResponse({
-                    'success': False,
-                    'error': str(e)
-                })
+    """API endpoint for AI image detection (requires API key)"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    # Require API key authentication
+    is_authenticated, error_response = require_api_key(request)
+    if not is_authenticated:
+        return error_response
+    
+    form = ImageUploadForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid form data',
+            'errors': form.errors
+        }, status=400)
+    
+    # Additional file validation
+    image_file = form.cleaned_data.get('image')
+    if image_file:
+        is_valid, error_msg = validate_image_file(image_file)
+        if not is_valid:
+            return JsonResponse({
+                'success': False,
+                'error': error_msg
+            }, status=400)
+    
+    image_upload = form.save()
+    
+    try:
+        result = get_detection_service().detect_ai_image(image_upload.image.path)
+        
+        if 'error' not in result:
+            image_upload.is_ai_generated = result['is_ai_generated']
+            image_upload.confidence_score = result['confidence']
+            image_upload.detection_indicators = result['indicators']
+            image_upload.analysis_details = result['analysis_details']
+            image_upload.ai_caption = result.get('caption', '')
+            image_upload.save()
+        
+        return JsonResponse({
+            'success': True,
+            'image_id': image_upload.pk,
+            'is_ai_generated': result.get('is_ai_generated', False),
+            'confidence': result.get('confidence', 0.0),
+            'indicators': result.get('indicators', []),
+            'caption': result.get('caption', ''),
+            'error': result.get('error', None)
+        })
+    except Exception as e:
+        logger.error(f"API detection error: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 @require_POST
-@csrf_exempt
 def submit_feedback(request, image_id):
-    """Submit user feedback for an image detection result"""
+    """Submit user feedback for an image detection result (CSRF protected)"""
     try:
         image_upload = get_object_or_404(ImageUpload, id=image_id)
         
@@ -215,6 +241,16 @@ def batch_upload(request):
         # Process accepted files
         for file in files_to_process:
             try:
+                # Validate file before processing
+                is_valid, error_msg = validate_image_file(file)
+                if not is_valid:
+                    results.append({
+                        'filename': file.name,
+                        'error': error_msg,
+                        'success': False
+                    })
+                    continue
+                
                 # Create ImageUpload instance
                 image_upload = ImageUpload(image=file)
                 image_upload.save()
@@ -434,11 +470,15 @@ def analytics_dashboard(request):
     
     return render(request, 'detector/analytics_dashboard.html', context)
 
-@csrf_exempt
 def api_detect_realtime(request):
-    """Real-time API endpoint for image detection"""
+    """Real-time API endpoint for image detection (requires API key)"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    # Require API key authentication
+    is_authenticated, error_response = require_api_key(request)
+    if not is_authenticated:
+        return error_response
     
     try:
         # Get image from request
@@ -447,12 +487,10 @@ def api_detect_realtime(request):
         
         image_file = request.FILES['image']
         
-        # Validate image
-        try:
-            image = Image.open(image_file)
-            image.verify()
-        except Exception:
-            return JsonResponse({'error': 'Invalid image file'}, status=400)
+        # Comprehensive file validation
+        is_valid, error_msg = validate_image_file(image_file)
+        if not is_valid:
+            return JsonResponse({'error': error_msg}, status=400)
         
         # Save temporary file
         import tempfile
@@ -485,11 +523,15 @@ def api_detect_realtime(request):
             'error': str(e)
         }, status=500)
 
-@csrf_exempt
 def api_batch_detect(request):
-    """API endpoint for batch image detection"""
+    """API endpoint for batch image detection (requires API key)"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    # Require API key authentication
+    is_authenticated, error_response = require_api_key(request)
+    if not is_authenticated:
+        return error_response
     
     try:
         files = request.FILES.getlist('images')
@@ -504,13 +546,21 @@ def api_batch_detect(request):
         
         for file in files:
             try:
-                # Validate image
-                image = Image.open(file)
-                image.verify()
+                # Comprehensive file validation
+                is_valid, error_msg = validate_image_file(file)
+                if not is_valid:
+                    results.append({
+                        'filename': file.name,
+                        'success': False,
+                        'error': error_msg
+                    })
+                    continue
                 
-                # Save temporary file
+                # Save temporary file with sanitized name
                 import tempfile
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
+                safe_filename = sanitize_filename(file.name)
+                _, ext = os.path.splitext(safe_filename)
+                with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_file:
                     file.seek(0)
                     tmp_file.write(file.read())
                     tmp_path = tmp_file.name
@@ -553,6 +603,7 @@ def api_batch_detect(request):
 def api_status(request):
     """API status endpoint"""
     try:
+        detection_service = get_detection_service()
         # Check if trained model is available
         has_trained_model = detection_service.trained_model is not None
         
