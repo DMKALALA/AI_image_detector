@@ -258,6 +258,8 @@
                                             <span class="badge bg-primary">{{ comparison.method_2.name }}</span>
                                         {% elif comparison.best_method == 'method_3' %}
                                             <span class="badge bg-primary">{{ comparison.method_3.name }}</span>
+                                        {% elif comparison.best_method == 'method_4' %}
+                                            <span class="badge bg-primary">⭐ {{ comparison.method_4.name }}</span>
                                         {% endif %}
                                     </p>
                                 </div>
@@ -397,6 +399,51 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Method 4: Hugging Face Specialized Models -->
+                        {% if comparison.method_4 and comparison.method_4.available %}
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="card {% if comparison.best_method == 'method_4' %}border-primary border-3{% else %}border-info border-2{% endif %}">
+                                    <div class="card-header {% if comparison.method_4.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1"><i class="fas fa-star"></i> ⭐ Method 4: Hugging Face Specialized Models</h5>
+                                                <small class="text-white-50">{{ comparison.method_4.description }}</small>
+                                            </div>
+                                            {% if comparison.best_method == 'method_4' %}
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-trophy"></i> Best Match</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 {% if comparison.method_4.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} text-white rounded">
+                                                    <h3 class="mb-1">{% if comparison.method_4.is_ai_generated %}AI{% else %}Real{% endif %}</h3>
+                                                    <small>Detection</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center p-3 bg-light rounded">
+                                                    <h3 class="mb-1">{{ comparison.method_4.confidence|percentage|floatformat:0 }}%</h3>
+                                                    <small>Confidence</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Key Indicators:</h6>
+                                                <ul class="list-unstyled mb-0">
+                                                    {% for indicator in comparison.method_4.indicators|slice:":5" %}
+                                                    <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                         
                         {% endwith %}
                     </div>
