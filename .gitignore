@@ -36,6 +36,10 @@ Thumbs.db
 *.pth
 *.h5
 *.ckpt
+*.bin
+*.safetensors
+hf_finetuned_models/
+*.pt
 
 # Training outputs
 training_plots/
@@ -46,6 +50,7 @@ genimage_*.png
 *_training_plots/
 *_results.json
 *_training_results.json
+training_log.txt
 
 # Test data
 genimage_data/
