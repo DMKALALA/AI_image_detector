@@ -62,3 +62,4 @@ genimage_data/
 # Temporary files
 *.tmp
 *.bak
+feedback_memory.json
