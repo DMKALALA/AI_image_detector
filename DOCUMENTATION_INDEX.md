@@ -136,6 +136,14 @@ Complete guide to all documentation files for the AI Image Detector project.
     - Team workflow
     - Access management
 
+14. **[docs/LARGE_FILES_GUIDE.md](docs/LARGE_FILES_GUIDE.md)** ⭐ NEW
+    - What works without large files (spoiler: everything!)
+    - Fine-tuned models (4.8GB) - Optional for +5% accuracy
+    - 5 sharing options (cloud, Git LFS, network, SCP, USB)
+    - Automatic fallback to pre-trained models
+    - Performance comparison (85% vs 90%)
+    - Recommended workflow for teams
+
 ---
 
 ## 🎓 Recommended Reading Order
@@ -268,7 +276,7 @@ git log --oneline -5
 
 ## 📊 Documentation Statistics
 
-- **Total Files**: 13 documentation files
+- **Total Files**: 15 documentation files
 - **Total Lines**: ~6,500 lines of documentation
 - **New Files**: 4 files in this update
 - **New Lines**: ~2,200 lines added

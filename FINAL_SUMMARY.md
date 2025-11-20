@@ -297,6 +297,7 @@ Your system is now:
 3. ✅ **Test Together** - Upload images, provide feedback
 
 ### Optional Enhancements:
+- ⭐ **Add Fine-Tuned Models** - +5-10% accuracy boost (see [docs/LARGE_FILES_GUIDE.md](docs/LARGE_FILES_GUIDE.md))
 - 🔒 **Add HTTPS** - Let's Encrypt SSL certificate
 - 🌐 **External Access** - Port forwarding/VPN for remote work
 - 📊 **Advanced Analytics** - More detailed dashboards
@@ -365,6 +366,15 @@ Perfect hardware for this deployment:
 - ✅ **Access point** for wireless connectivity
 
 **Recommendation**: Your setup can easily handle 10-20 concurrent users analyzing images!
+
+### 📦 Note on Large Files
+
+The system will **work immediately** without any large files:
+- Models auto-download from HuggingFace Hub (~500MB, one-time)
+- Accuracy: ~85% out of the box
+- **Optional**: Add fine-tuned models later for ~90% accuracy (+5%)
+
+See [docs/LARGE_FILES_GUIDE.md](docs/LARGE_FILES_GUIDE.md) for options to share the 4.8GB of fine-tuned models.
 
 ---
 
