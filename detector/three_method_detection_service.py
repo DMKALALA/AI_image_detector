@@ -273,25 +273,25 @@ class ThreeMethodDetectionService:
         # Load saved weights if available, otherwise use defaults
         weights_config_path = 'method_weights_config.json'
         
-        # Default weights based on latest analysis (last 30 samples)
-        # CRITICAL: Method 3 is worst (33.3% accuracy, 100% confidence on errors) - reduce drastically
-        # Method 1: 56.7% accuracy - BEST performer
-        # Method 2: 40% accuracy - has 17 false positives
+        # IMPROVED: Rebalanced weights to prevent single method dominance
+        # Previous: Method 2 had 64.7% (too dominant)
+        # New: More balanced distribution, HuggingFace gets highest (specialized models)
         default_weights = {
-            'method_1': 0.20,  # Deep Learning - good baseline
-            'method_2': 0.25,  # Statistical - reliable patterns
-            'method_3': 0.05,  # Spectral - REDUCED (overconfident, 100% confidence issue)
-            'method_4': 0.30,  # HuggingFace - Fine-tuned specialists
+            'method_1': 0.22,  # Deep Learning - increased (solid baseline)
+            'method_2': 0.20,  # Statistical - decreased (was too dominant at 64%)
+            'method_3': 0.03,  # Spectral - minimal (has confidence issues)
+            'method_4': 0.35,  # HuggingFace - HIGHEST (fine-tuned specialists)
             'method_5': 0.20   # Enterprise - Industry-proven models (optional)
         }
         
-        # Default confidence calibration
+        # IMPROVED: More aggressive confidence calibration for Method 3
+        # Method 3 shows systematic overconfidence (100% when wrong)
         default_calibration = {
-            'method_1': 0.8,   # Improved Method 1 - conservative start, adjust after testing
-            'method_2': 1.0,   # Method 2 has excellent calibration - no adjustment needed
-            'method_3': 0.5,   # REDUCED from 0.7 - Method 3 shows 100% confidence, needs major reduction
-            'method_4': 0.95,  # Hugging Face models - fine-tuned specialists, expect good calibration
-            'method_5': 0.90   # Enterprise models - industry-proven, good calibration expected
+            'method_1': 0.85,  # Improved Method 1 - slightly increased after testing
+            'method_2': 0.95,  # Method 2 - slightly reduced (was overweighted)
+            'method_3': 0.35,  # MAJOR REDUCTION (was 0.5, now 0.35 - systematic overconfidence)
+            'method_4': 0.95,  # Hugging Face models - fine-tuned specialists
+            'method_5': 0.90   # Enterprise models - industry-proven
         }
         
         # Try to load saved weights from adaptive learning
@@ -312,6 +312,10 @@ class ThreeMethodDetectionService:
         else:
             self.method_accuracy_weights = default_weights
             self.confidence_calibration = default_calibration
+        
+        # IMPROVEMENT: Dynamic weight normalization when methods unavailable
+        # Ensure weights of unavailable methods are distributed to active ones
+        self._normalize_weights_for_available_methods()
         
         # Confidence calibration factors (adjusted for Improved Methods)
         # Method 2 has excellent calibration (70.7% confidence, 70% accuracy) - no change
@@ -343,6 +347,56 @@ class ThreeMethodDetectionService:
             'method_2': 0.42,  # RAISED from 0.35 - reduce false positives (17 errors!)
             'method_3': 0.55   # RAISED from 0.28 to 0.55 - Method 3 has 100% confidence on errors!
         }
+        
+        # IMPROVEMENT: Adaptive weighting system
+        self.adaptive_learning_enabled = True
+        self.detection_count = 0
+        self.adaptive_update_interval = 100  # Update weights every 100 detections
+    
+    def _normalize_weights_for_available_methods(self):
+        """
+        IMPROVEMENT 4: Dynamic weight normalization
+        Redistributes weights of unavailable methods to active ones proportionally
+        """
+        available_methods = {}
+        unavailable_weight = 0.0
+        
+        # Check which methods are actually available
+        method_availability = {
+            'method_1': self.improved_method_1 is not None or self.modern_ensemble is not None or self.trained_model is not None,
+            'method_2': True,  # Statistical method always available (no model loading)
+            'method_3': self.advanced_spectral_method_3 is not None or self.improved_method_3 is not None,
+            'method_4': self.huggingface_ensemble is not None,
+            'method_5': self.enterprise_ensemble is not None
+        }
+        
+        # Calculate total weight of unavailable methods
+        for method_id, is_available in method_availability.items():
+            if is_available:
+                available_methods[method_id] = self.method_accuracy_weights.get(method_id, 0)
+            else:
+                unavailable_weight += self.method_accuracy_weights.get(method_id, 0)
+        
+        # If some methods are unavailable, redistribute their weight
+        if unavailable_weight > 0 and available_methods:
+            total_available_weight = sum(available_methods.values())
+            
+            if total_available_weight > 0:
+                # Redistribute proportionally
+                redistribution_factor = (1.0 + unavailable_weight) / 1.0
+                
+                for method_id in available_methods:
+                    self.method_accuracy_weights[method_id] *= redistribution_factor
+                
+                # Zero out unavailable methods
+                for method_id, is_available in method_availability.items():
+                    if not is_available:
+                        self.method_accuracy_weights[method_id] = 0.0
+                
+                logger.info(f"⚖️ Normalized weights for {len(available_methods)} available methods")
+                logger.info(f"  Redistributed {unavailable_weight*100:.1f}% from unavailable methods")
+                for method_id, weight in available_methods.items():
+                    logger.info(f"  {method_id}: {self.method_accuracy_weights[method_id]*100:.1f}%")
     
     def _load_genimage_model(self):
         """Load the trained GenImage model for Method 1"""

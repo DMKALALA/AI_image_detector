@@ -207,8 +207,128 @@ class FeedbackLearningService:
         return prediction_result
 
 
-# Global instance
+# IMPROVEMENT 7: Generalized Feedback Learning
+class GeneralizedFeedbackLearning:
+    """
+    Learn from feedback beyond just re-uploads
+    Builds a profile of what makes images AI vs Real based on user corrections
+    """
+    
+    def __init__(self):
+        self.learning_db_path = 'generalized_feedback_patterns.json'
+        self.patterns = self._load_patterns()
+    
+    def _load_patterns(self) -> dict:
+        """Load learned patterns from disk"""
+        if os.path.exists(self.learning_db_path):
+            try:
+                with open(self.learning_db_path, 'r') as f:
+                    return json.load(f)
+            except:
+                return {'ai_indicators': {}, 'real_indicators': {}}
+        return {'ai_indicators': {}, 'real_indicators': {}}
+    
+    def _save_patterns(self):
+        """Save learned patterns to disk"""
+        try:
+            with open(self.learning_db_path, 'w') as f:
+                json.dump(self.patterns, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save patterns: {e}")
+    
+    def learn_from_correction(self, indicators: list, was_prediction: bool, 
+                             actual_answer: bool):
+        """
+        Learn what indicators correlate with AI vs Real
+        When user corrects us, update indicator weights
+        """
+        if was_prediction == actual_answer:
+            # We were right, reinforce these indicators
+            target = 'ai_indicators' if actual_answer else 'real_indicators'
+        else:
+            # We were wrong, these indicators mislead us
+            # Record in opposite category with negative weight
+            target = 'real_indicators' if was_prediction else 'ai_indicators'
+        
+        for indicator in indicators:
+            # Extract key phrases from indicator text
+            phrases = self._extract_key_phrases(indicator)
+            
+            for phrase in phrases:
+                if phrase not in self.patterns[target]:
+                    self.patterns[target][phrase] = {'count': 0, 'weight': 0.0}
+                
+                pattern = self.patterns[target][phrase]
+                pattern['count'] += 1
+                
+                # Adjust weight: positive for correct, negative for incorrect
+                if was_prediction == actual_answer:
+                    pattern['weight'] += 0.1  # Reinforce
+                else:
+                    pattern['weight'] -= 0.15  # Penalize misleading indicators
+        
+        self._save_patterns()
+        logger.info(f"📚 Learned from correction: {actual_answer} (was {was_prediction})")
+    
+    def _extract_key_phrases(self, indicator: str) -> list:
+        """Extract meaningful phrases from indicator text"""
+        # Simple extraction: look for key technical terms
+        phrases = []
+        keywords = [
+            'spectral', 'texture', 'color', 'edge', 'entropy', 'pattern',
+            'frequency', 'noise', 'compression', 'artifact', 'metadata',
+            'uniform', 'variation', 'distribution', 'symmetry'
+        ]
+        
+        indicator_lower = indicator.lower()
+        for keyword in keywords:
+            if keyword in indicator_lower:
+                phrases.append(keyword)
+        
+        return phrases
+    
+    def adjust_confidence_from_patterns(self, indicators: list, 
+                                       prediction: bool, confidence: float) -> float:
+        """
+        Adjust confidence based on learned patterns
+        If indicators match learned AI patterns, boost confidence for AI prediction
+        If indicators match learned Real patterns, boost confidence for Real prediction
+        """
+        ai_score = 0.0
+        real_score = 0.0
+        
+        # Check each indicator against learned patterns
+        for indicator in indicators:
+            phrases = self._extract_key_phrases(indicator)
+            
+            for phrase in phrases:
+                if phrase in self.patterns['ai_indicators']:
+                    ai_score += self.patterns['ai_indicators'][phrase]['weight']
+                if phrase in self.patterns['real_indicators']:
+                    real_score += self.patterns['real_indicators'][phrase]['weight']
+        
+        # Adjust confidence based on pattern alignment
+        if prediction:  # Predicting AI
+            if ai_score > real_score:
+                adjustment = min(0.15, (ai_score - real_score) * 0.05)
+                confidence = min(0.95, confidence * (1 + adjustment))
+            else:
+                adjustment = min(0.15, (real_score - ai_score) * 0.05)
+                confidence = confidence * (1 - adjustment)
+        else:  # Predicting Real
+            if real_score > ai_score:
+                adjustment = min(0.15, (real_score - ai_score) * 0.05)
+                confidence = min(0.95, confidence * (1 + adjustment))
+            else:
+                adjustment = min(0.15, (ai_score - real_score) * 0.05)
+                confidence = confidence * (1 - adjustment)
+        
+        return confidence
+
+
+# Global instances
 _feedback_service = None
+_generalized_learning = None
 
 def get_feedback_service():
     """Get or create the feedback learning service instance"""
@@ -216,4 +336,11 @@ def get_feedback_service():
     if _feedback_service is None:
         _feedback_service = FeedbackLearningService()
     return _feedback_service
+
+def get_generalized_learning():
+    """Get or create the generalized learning instance"""
+    global _generalized_learning
+    if _generalized_learning is None:
+        _generalized_learning = GeneralizedFeedbackLearning()
+    return _generalized_learning
 

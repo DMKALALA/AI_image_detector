@@ -137,19 +137,22 @@ class AdvancedSpectralMethod3:
             normalized_score = max(0.0, min(1.0, (ai_score + 0.59) / 1.67))
             
             # Calculate confidence based on factor agreement
-            # CRITICAL: Method 3 was showing 100% confidence - MAJOR CALIBRATION FIX
+            # IMPROVED: More conservative confidence calculation
+            # Method 3 was showing 100% confidence when wrong - systematic overconfidence
             if confidences:
                 avg_confidence = np.mean(confidences)
-                # REDUCED boost - was too aggressive (1.12 → 1.05, 1.08 → 1.03)
-                if len(factors) >= 3:
-                    confidence_boost = 1.05  # Was 1.12
+                # DRASTICALLY REDUCED boost to prevent overconfidence
+                if len(factors) >= 4:
+                    confidence_boost = 1.00  # No boost even with 4+ factors
+                elif len(factors) >= 3:
+                    confidence_boost = 0.95  # Actually reduce confidence
                 elif len(factors) >= 2:
-                    confidence_boost = 1.03  # Was 1.08
+                    confidence_boost = 0.90  # Stronger reduction
                 else:
-                    confidence_boost = 1.0
+                    confidence_boost = 0.85  # Most conservative
                 base_confidence = avg_confidence * confidence_boost
             else:
-                base_confidence = 0.5
+                base_confidence = 0.40  # Lower default (was 0.5)
             
             # Determine prediction with adaptive threshold
             # CRITICAL FIX: Method 3 has 20 false positives with 100% confidence! Must raise thresholds significantly
@@ -164,18 +167,26 @@ class AdvancedSpectralMethod3:
             
             is_ai_generated = normalized_score > threshold
             
-            # CRITICAL FIX: Confidence calculation was reaching 100% - cap it much lower
-            # Old formula: min(1.0, base_confidence * (1 + abs(normalized_score - 0.5)))
-            # New formula: Much more conservative
-            confidence_multiplier = 1 + (abs(normalized_score - 0.5) * 0.5)  # Was 1.0, now 0.5
-            confidence = min(0.85, base_confidence * confidence_multiplier * 0.7)  # Cap at 85%, reduce by 30%
+            # IMPROVED: Much more conservative confidence calculation
+            # Previous: Method 3 showed 100% confidence when wrong
+            # Solution: Cap much lower and apply stronger penalties
+            confidence_multiplier = 1 + (abs(normalized_score - 0.5) * 0.3)  # Reduced from 0.5 to 0.3
+            
+            # Multiple layers of confidence reduction
+            confidence = base_confidence * confidence_multiplier
+            confidence = confidence * 0.60  # Reduce by 40% (was 0.7, now 0.60)
+            confidence = min(0.70, confidence)  # Cap at 70% (was 85%)
+            
+            # Adjust based on number of factors (fewer factors = lower confidence)
+            if len(factors) < 2:
+                confidence *= 0.75  # Additional 25% reduction for weak signals
             
             if not factors:
                 indicators.append("Spectral analysis: No strong patterns detected")
                 indicators.append("Statistical features suggest natural image variation")
                 # When no factors, default to Real to reduce false positives
                 is_ai_generated = normalized_score > 0.65  # RAISED from 0.40 to 0.65 - very conservative
-                confidence = max(0.30, normalized_score * 0.7)
+                confidence = max(0.25, normalized_score * 0.50)  # Further reduced (was 0.7, now 0.50)
             
             return {
                 'is_ai_generated': is_ai_generated,
