@@ -17,6 +17,57 @@
             </div>
         </div>
         
+        <!-- System Status -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle"></i> System Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">Model imports: 
+                            {% if model_availability.enable_model_imports %}
+                                <span class="badge bg-success">Enabled</span>
+                            {% else %}
+                                <span class="badge bg-danger">Disabled</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-2">PyTorch available: 
+                            {% if model_availability.torch_available %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-danger">No</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-0 text-muted small">Unprocessed uploads (no detection run): {{ unprocessed_images }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-robot"></i> Model Availability</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for label, available in model_availability.items %}
+                            {% if label != 'enable_model_imports' and label != 'torch_available' %}
+                            <div class="col-md-4 mb-2">
+                                <span class="fw-semibold text-capitalize">{{ label|cut:"_" }}</span><br>
+                                {% if available %}
+                                    <span class="badge bg-success">Available</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Unavailable</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Overview Cards -->
         <div class="row mb-4">
             <div class="col-md-3">
@@ -159,7 +210,13 @@
                                     <div class="card-body text-center">
                                         <h6>{{ method.method|title }}</h6>
                                         <h4 class="text-primary">{{ method.count }}</h4>
-                                        <small>{% widthratio method.count total_images 100 %}%</small>
+                                        <small>
+                                            {% if processed_images %}
+                                                {% widthratio method.count processed_images 100 %}%
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </small>
                                     </div>
                                 </div>
                             </div>

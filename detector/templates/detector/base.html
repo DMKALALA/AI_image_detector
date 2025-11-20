@@ -157,11 +157,32 @@
     <!-- Footer -->
     <footer class="bg-dark text-light py-4 mt-5">
         <div class="container text-center">
-            <p>&copy; 2024 AI Image Detector. Built with Django and Transformers.</p>
+            <p>&copy; {% now "Y" %} AI Image Detector. Built with Django and Transformers.</p>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            const localDateNodes = document.querySelectorAll('.local-datetime[data-utc-datetime]');
+            if (!localDateNodes.length) return;
+            localDateNodes.forEach(node => {
+                const utcValue = node.getAttribute('data-utc-datetime');
+                if (!utcValue) {
+                    return;
+                }
+                const date = new Date(utcValue);
+                if (isNaN(date.getTime())) {
+                    return;
+                }
+                const formatter = new Intl.DateTimeFormat(undefined, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                });
+                node.textContent = formatter.format(date);
+            });
+        })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

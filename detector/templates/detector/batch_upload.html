@@ -310,7 +310,17 @@
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(async response => {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || `Server error: ${response.status}`);
+                }
+                return data;
+            }
+            throw new Error('Server returned a non-JSON response');
+        })
         .then(data => {
             clearInterval(progressInterval);
             progressBar.style.width = '100%';
@@ -342,6 +352,7 @@
                 const statusClass = result.is_ai_generated ? 'danger' : 'success';
                 const statusText = result.is_ai_generated ? 'AI-Generated' : 'Real';
                 const confidence = Math.round(result.confidence * 100);
+                const previewImage = result.image_url ? `<img src="${result.image_url}" alt="${result.filename}" class="img-fluid mb-2 rounded">` : '';
                 
                 html += `
                     <div class="col-md-6 col-lg-4 mb-3">
@@ -350,6 +361,7 @@
                                 <h6 class="mb-0">${result.filename}</h6>
                             </div>
                             <div class="card-body">
+                                ${previewImage}
                                 <p class="mb-1"><strong>Result:</strong> ${statusText}</p>
                                 <p class="mb-1"><strong>Confidence:</strong> ${confidence}%</p>
                                 <a href="/result/${result.id}/" class="btn btn-sm btn-outline-primary">

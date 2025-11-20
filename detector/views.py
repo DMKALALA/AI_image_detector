@@ -6,7 +6,17 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import ImageUpload
 from .forms import ImageUploadForm
-from .three_method_detection_service import get_detection_service
+from .three_method_detection_service import (
+    get_detection_service,
+    ENABLE_MODEL_IMPORTS,
+    TORCH_AVAILABLE,
+    MODERN_ENSEMBLE_AVAILABLE,
+    IMPROVED_METHOD_1_AVAILABLE,
+    ADVANCED_SPECTRAL_METHOD_3_AVAILABLE,
+    IMPROVED_METHOD_3_AVAILABLE,
+    HUGGINGFACE_AVAILABLE,
+    ENTERPRISE_MODELS_AVAILABLE,
+)
 from .security_utils import validate_image_file, sanitize_filename, require_api_key
 import os
 import json
@@ -245,7 +255,36 @@ def feedback_stats(request):
 def batch_upload(request):
     """Batch upload page for multiple images - limited to 10 files"""
     if request.method == 'POST':
+        try:
+            detection_service = get_detection_service()
+        except Exception as exc:
+            logger.error("Batch detection initialization failed: %s", exc, exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'results': [],
+                'total_processed': 0,
+                'rejected_files': [],
+                'error': 'Failed to initialize detection service. Check server logs for details.'
+            }, status=500)
+
+        if detection_service is None:
+            return JsonResponse({
+                'success': False,
+                'results': [],
+                'total_processed': 0,
+                'rejected_files': [],
+                'error': 'Detection service is not available. PyTorch imports are disabled (ENABLE_MODEL_IMPORTS=0).'
+            }, status=503)
+
         files = request.FILES.getlist('images')
+        if not files:
+            return JsonResponse({
+                'success': False,
+                'results': [],
+                'total_processed': 0,
+                'rejected_files': [],
+                'error': 'No images provided'
+            }, status=400)
         results = []
         rejected_files = []
         
@@ -272,19 +311,13 @@ def batch_upload(request):
                 image_upload.save()
                 
                 # Perform AI detection using comparative service
-                detection_service = get_detection_service()
-                if detection_service is None:
-                    results.append({
-                        'filename': file.name,
-                        'error': 'Detection service is not available. PyTorch imports are disabled (ENABLE_MODEL_IMPORTS=0).',
-                        'success': False
-                    })
-                    continue
                 result = detection_service.detect_ai_image(image_upload.image.path)
                 
                 if 'error' not in result:
-                    image_upload.is_ai_generated = result['is_ai_generated']
-                    image_upload.confidence_score = result['confidence']
+                    is_ai_generated = bool(result['is_ai_generated'])
+                    confidence = float(result['confidence'])
+                    image_upload.is_ai_generated = is_ai_generated
+                    image_upload.confidence_score = confidence
                     image_upload.detection_indicators = result['indicators']
                     image_upload.analysis_details = result['analysis_details']
                     image_upload.method = result.get('method', 'unknown')
@@ -293,8 +326,9 @@ def batch_upload(request):
                     results.append({
                         'id': image_upload.id,
                         'filename': image_upload.filename,
-                        'is_ai_generated': result['is_ai_generated'],
-                        'confidence': result['confidence'],
+                        'is_ai_generated': is_ai_generated,
+                        'confidence': confidence,
+                        'image_url': image_upload.image.url if image_upload.image else '',
                         'success': True
                     })
                 else:
@@ -415,32 +449,36 @@ def analytics_dashboard(request):
     
     # Basic statistics
     total_images = ImageUpload.objects.count()
-    ai_images = ImageUpload.objects.filter(is_ai_generated=True).count()
-    real_images = ImageUpload.objects.filter(is_ai_generated=False).count()
+    processed_images = ImageUpload.objects.exclude(method__iexact='unknown').count()
+    unprocessed_images = total_images - processed_images
+    # Use processed records for most analytics
+    processed_queryset = ImageUpload.objects.exclude(method__iexact='unknown')
+    ai_images = processed_queryset.filter(is_ai_generated=True).count()
+    real_images = processed_queryset.filter(is_ai_generated=False).count()
     
     # Feedback statistics
-    total_feedback = ImageUpload.objects.exclude(user_feedback='').count()
-    correct_feedback = ImageUpload.objects.filter(user_feedback='correct').count()
-    incorrect_feedback = ImageUpload.objects.filter(user_feedback='incorrect').count()
-    unsure_feedback = ImageUpload.objects.filter(user_feedback='unsure').count()
+    total_feedback = processed_queryset.exclude(user_feedback='').count()
+    correct_feedback = processed_queryset.filter(user_feedback='correct').count()
+    incorrect_feedback = processed_queryset.filter(user_feedback='incorrect').count()
+    unsure_feedback = processed_queryset.filter(user_feedback='unsure').count()
     
     # Accuracy calculation
     total_decisions = correct_feedback + incorrect_feedback
     accuracy = (correct_feedback / total_decisions * 100) if total_decisions > 0 else 0
     
     # Confidence statistics
-    avg_confidence = ImageUpload.objects.aggregate(avg_conf=Avg('confidence_score'))['avg_conf'] or 0
-    high_confidence = ImageUpload.objects.filter(confidence_score__gte=0.8).count()
-    medium_confidence = ImageUpload.objects.filter(confidence_score__gte=0.5, confidence_score__lt=0.8).count()
-    low_confidence = ImageUpload.objects.filter(confidence_score__lt=0.5).count()
+    avg_confidence = processed_queryset.aggregate(avg_conf=Avg('confidence_score'))['avg_conf'] or 0
+    high_confidence = processed_queryset.filter(confidence_score__gte=0.8).count()
+    medium_confidence = processed_queryset.filter(confidence_score__gte=0.5, confidence_score__lt=0.8).count()
+    low_confidence = processed_queryset.filter(confidence_score__lt=0.5).count()
     
     # Method statistics
-    method_stats = ImageUpload.objects.values('method').annotate(count=Count('method')).order_by('-count')
+    method_stats = processed_queryset.values('method').annotate(count=Count('method')).order_by('-count')
     
     # Recent activity (last 7 days)
     week_ago = datetime.now() - timedelta(days=7)
-    recent_uploads = ImageUpload.objects.filter(uploaded_at__gte=week_ago).count()
-    recent_feedback = ImageUpload.objects.filter(feedback_timestamp__gte=week_ago).count()
+    recent_uploads = processed_queryset.filter(uploaded_at__gte=week_ago).count()
+    recent_feedback = processed_queryset.filter(feedback_timestamp__gte=week_ago).count()
     
     # Daily uploads for chart
     daily_uploads = []
@@ -464,14 +502,28 @@ def analytics_dashboard(request):
     ]
     
     for range_data in confidence_ranges:
-        count = ImageUpload.objects.filter(
+        count = processed_queryset.filter(
             confidence_score__gte=range_data['min'],
             confidence_score__lt=range_data['max']
         ).count()
         range_data['count'] = count
+
+    # Model availability/health flags
+    model_availability = {
+        'enable_model_imports': ENABLE_MODEL_IMPORTS,
+        'torch_available': TORCH_AVAILABLE,
+        'modern_ensemble': MODERN_ENSEMBLE_AVAILABLE,
+        'improved_method_1': IMPROVED_METHOD_1_AVAILABLE,
+        'advanced_spectral_method_3': ADVANCED_SPECTRAL_METHOD_3_AVAILABLE,
+        'improved_method_3': IMPROVED_METHOD_3_AVAILABLE,
+        'huggingface': HUGGINGFACE_AVAILABLE,
+        'enterprise': ENTERPRISE_MODELS_AVAILABLE,
+    }
     
     context = {
         'total_images': total_images,
+        'processed_images': processed_images,
+        'unprocessed_images': unprocessed_images,
         'ai_images': ai_images,
         'real_images': real_images,
         'total_feedback': total_feedback,
@@ -489,7 +541,8 @@ def analytics_dashboard(request):
         'recent_feedback': recent_feedback,
         'daily_uploads': daily_uploads,
         'confidence_ranges': confidence_ranges,
-        'feedback_rate': (total_feedback / total_images * 100) if total_images > 0 else 0
+        'feedback_rate': (total_feedback / processed_images * 100) if processed_images > 0 else 0,
+        'model_availability': model_availability,
     }
     
     return render(request, 'detector/analytics_dashboard.html', context)

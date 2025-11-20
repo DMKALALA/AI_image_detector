@@ -164,7 +164,11 @@
                         <!-- Upload Date -->
                         <div class="mb-2">
                             <strong>Uploaded:</strong> 
-                            <small class="text-muted">{{ upload.uploaded_at|date:"M d, Y H:i" }}</small>
+                            <small class="text-muted">
+                                <span class="local-datetime" data-utc-datetime="{{ upload.uploaded_at|date:'c' }}">
+                                    {{ upload.uploaded_at|date:"M d, Y H:i" }} UTC
+                                </span>
+                            </small>
                         </div>
                         
                         <!-- Indicators -->
@@ -291,6 +295,21 @@
 <script>
 let currentImageId = null;
 
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function showFeedbackModal(imageId) {
     currentImageId = imageId;
     const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
@@ -305,30 +324,39 @@ function submitQuickFeedback(feedback) {
     statusDiv.className = 'alert alert-info';
     statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting feedback...';
     
+    const csrfToken = getCookie('csrftoken');
+    
     fetch(`/feedback/${currentImageId}/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+            'X-CSRFToken': csrfToken || ''
         },
         body: JSON.stringify({
             feedback: feedback,
             notes: ''
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        }
+        throw new Error('Server returned a non-JSON response');
+    })
     .then(data => {
         if (data.success) {
-            statusDiv.className = 'alert alert-success';
-            statusDiv.innerHTML = '<i class="fas fa-check"></i> ' + data.message;
-            
-            // Close modal after 2 seconds
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
-                modal.hide();
-                // Reload page to show updated feedback
-                location.reload();
-            }, 2000);
+                statusDiv.className = 'alert alert-success';
+                statusDiv.innerHTML = '<i class="fas fa-check"></i> ' + data.message;
+                
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
+                    modal.hide();
+                    location.reload();
+                }, 2000);
         } else {
             statusDiv.className = 'alert alert-danger';
             statusDiv.innerHTML = '<i class="fas fa-times"></i> Error: ' + data.error;
