@@ -182,15 +182,9 @@ def submit_feedback(request, image_id):
             
             # Record feedback with image hash
             if image_upload.image and hasattr(image_upload.image, 'path'):
-                feedback_service.record_feedback(
-                    image_hash=None,  # Will compute from path
-                    prediction=image_upload.is_ai_generated,
-                    confidence=image_upload.confidence_score,
-                    user_feedback=feedback,
-                    correct_answer=correct_answer
-                )
-                # Compute and save hash
+                # Compute hash FIRST (FIX: removed None hash recording)
                 image_hash = feedback_service.compute_image_hash(image_upload.image.path)
+                
                 if image_hash:
                     feedback_service.record_feedback(
                         image_hash=image_hash,
@@ -201,8 +195,6 @@ def submit_feedback(request, image_id):
                     )
         except Exception as e:
             # Don't fail feedback submission if learning fails
-            import logging
-            logger = logging.getLogger(__name__)
             logger.warning(f"Feedback learning recording failed: {e}")
         
         # Trigger adaptive learning (asynchronously)
@@ -211,8 +203,6 @@ def submit_feedback(request, image_id):
             adaptive_learning_service.trigger_learning_on_feedback(image_upload)
         except Exception as e:
             # Don't fail feedback submission if learning fails
-            import logging
-            logger = logging.getLogger(__name__)
             logger.warning(f"Adaptive learning failed: {e}")
         
         return JsonResponse({

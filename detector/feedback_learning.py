@@ -111,6 +111,11 @@ class FeedbackLearningService:
             user_feedback: 'correct', 'incorrect', or 'unsure'
             correct_answer: The actual answer if feedback is 'incorrect'
         """
+        # FIX: Convert numpy types to native Python types for JSON serialization
+        prediction = bool(prediction) if prediction is not None else None
+        confidence = float(confidence) if confidence is not None else 0.0
+        correct_answer = bool(correct_answer) if correct_answer is not None else None
+        
         if image_hash not in self.feedback_memory:
             self.feedback_memory[image_hash] = {
                 'times_seen': 0,
@@ -157,6 +162,7 @@ class FeedbackLearningService:
             Adjusted prediction result with feedback-based modifications
         """
         image_hash = self.compute_image_hash(image_path)
+        
         if not image_hash:
             return prediction_result
         
@@ -176,23 +182,25 @@ class FeedbackLearningService:
             # If we know the correct answer from previous feedback
             if correct_answer is not None and user_feedback == 'incorrect':
                 # Override prediction with learned answer
+                # FIX: Convert numpy types to native Python types
+                correct_answer = bool(correct_answer)
                 indicators.insert(1, f"📚 Learned from feedback: This is {'AI' if correct_answer else 'Real'}")
                 prediction_result['is_ai_generated'] = correct_answer
-                prediction_result['confidence'] = min(0.95, prediction_result['confidence'] * 1.2)
+                prediction_result['confidence'] = float(min(0.95, float(prediction_result['confidence']) * 1.2))
                 indicators.insert(2, "Confidence boosted based on feedback history")
             
             elif user_feedback == 'correct':
                 # User confirmed we were right before - boost confidence
-                adjustment = previous['confidence_adjustment']
-                old_conf = prediction_result['confidence']
-                prediction_result['confidence'] = min(0.98, old_conf * adjustment)
+                adjustment = float(previous['confidence_adjustment'])
+                old_conf = float(prediction_result['confidence'])
+                prediction_result['confidence'] = float(min(0.98, old_conf * adjustment))
                 indicators.insert(1, f"✅ Previously confirmed correct (confidence +{(adjustment-1)*100:.0f}%)")
             
             elif user_feedback == 'incorrect':
                 # We were wrong before - be more cautious
-                adjustment = previous['confidence_adjustment']
-                old_conf = prediction_result['confidence']
-                prediction_result['confidence'] = old_conf * adjustment
+                adjustment = float(previous['confidence_adjustment'])
+                old_conf = float(prediction_result['confidence'])
+                prediction_result['confidence'] = float(old_conf * adjustment)
                 indicators.insert(1, f"⚠️ Previously incorrect (confidence reduced {(1-adjustment)*100:.0f}%)")
             
             prediction_result['indicators'] = indicators
