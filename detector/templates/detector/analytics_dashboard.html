@@ -113,7 +113,7 @@
                         <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Detection Distribution</h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="detectionChart" width="400" height="200"></canvas>
+                        <div id="detectionChart" style="width: 100%; height: 300px;"></div>
                     </div>
                 </div>
             </div>
@@ -125,7 +125,7 @@
                         <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Confidence Distribution</h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="confidenceChart" width="400" height="200"></canvas>
+                        <div id="confidenceChart" style="width: 100%; height: 300px;"></div>
                     </div>
                 </div>
             </div>
@@ -188,7 +188,7 @@
                             </div>
                         </div>
                         <div class="mt-3">
-                            <canvas id="activityChart" width="400" height="150"></canvas>
+                            <div id="activityChart" style="width: 100%; height: 200px;"></div>
                         </div>
                     </div>
                 </div>
@@ -264,7 +264,7 @@
                         
                         <!-- Confidence Ranges Chart -->
                         <div class="mt-4">
-                            <canvas id="confidenceRangesChart" width="800" height="200"></canvas>
+                            <div id="confidenceRangesChart" style="width: 100%; height: 300px;"></div>
                         </div>
                     </div>
                 </div>
@@ -275,102 +275,159 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Detection Distribution Chart
-    const detectionCtx = document.getElementById('detectionChart').getContext('2d');
-    new Chart(detectionCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Real Images', 'AI Images'],
-            datasets: [{
-                data: [{{ real_images }}, {{ ai_images }}],
-                backgroundColor: ['#28a745', '#dc3545'],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    // Load Google Charts
+    google.charts.load('current', {'packages':['corechart', 'bar', 'line']});
+    google.charts.setOnLoadCallback(drawCharts);
+
+    function drawCharts() {
+        drawDetectionChart();
+        drawConfidenceChart();
+        drawActivityChart();
+        drawConfidenceRangesChart();
+    }
+
+    // Detection Distribution Pie Chart
+    function drawDetectionChart() {
+        var data = google.visualization.arrayToDataTable([
+            ['Type', 'Count'],
+            ['Real Images', {{ real_images }}],
+            ['AI Images', {{ ai_images }}]
+        ]);
+
+        var options = {
+            title: '',
+            pieHole: 0.4,
+            colors: ['#34A853', '#EA4335'],
+            legend: { position: 'bottom' },
+            chartArea: { width: '90%', height: '75%' },
+            pieSliceText: 'value',
+            tooltip: { text: 'both' },
+            animation: {
+                startup: true,
+                duration: 1000,
+                easing: 'out'
             }
-        }
-    });
-    
-    // Confidence Distribution Chart
-    const confidenceCtx = document.getElementById('confidenceChart').getContext('2d');
-    new Chart(confidenceCtx, {
-        type: 'bar',
-        data: {
-            labels: ['High', 'Medium', 'Low'],
-            datasets: [{
-                label: 'Images',
-                data: [{{ high_confidence }}, {{ medium_confidence }}, {{ low_confidence }}],
-                backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-    
-    // Activity Chart
-    const activityCtx = document.getElementById('activityChart').getContext('2d');
-    const dailyData = {{ daily_uploads|safe }};
-    new Chart(activityCtx, {
-        type: 'line',
-        data: {
-            labels: dailyData.map(d => d.date).reverse(),
-            datasets: [{
-                label: 'Daily Uploads',
-                data: dailyData.map(d => d.count).reverse(),
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-    
-    // Confidence Ranges Chart
-    const confidenceRangesCtx = document.getElementById('confidenceRangesChart').getContext('2d');
-    const rangesData = {{ confidence_ranges|safe }};
-    new Chart(confidenceRangesCtx, {
-        type: 'bar',
-        data: {
-            labels: rangesData.map(r => r.range),
-            datasets: [{
-                label: 'Images',
-                data: rangesData.map(r => r.count),
-                backgroundColor: [
-                    '#dc3545', '#fd7e14', '#ffc107', '#20c997', '#28a745'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('detectionChart'));
+        chart.draw(data, options);
+    }
+
+    // Confidence Distribution Bar Chart
+    function drawConfidenceChart() {
+        var data = google.visualization.arrayToDataTable([
+            ['Confidence Level', 'Images', { role: 'style' }],
+            ['High (80%+)', {{ high_confidence }}, '#34A853'],
+            ['Medium (50-80%)', {{ medium_confidence }}, '#FBBC04'],
+            ['Low (<50%)', {{ low_confidence }}, '#EA4335']
+        ]);
+
+        var options = {
+            title: '',
+            legend: { position: 'none' },
+            chartArea: { width: '80%', height: '70%' },
+            vAxis: { 
+                title: 'Number of Images',
+                minValue: 0,
+                format: '0'
+            },
+            hAxis: { 
+                title: 'Confidence Level'
+            },
+            animation: {
+                startup: true,
+                duration: 1000,
+                easing: 'out'
+            },
+            bar: { groupWidth: '75%' }
+        };
+
+        var chart = new google.visualization.ColumnChart(document.getElementById('confidenceChart'));
+        chart.draw(data, options);
+    }
+
+    // Activity Line Chart
+    function drawActivityChart() {
+        const dailyData = {{ daily_uploads|safe }};
+        
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Date');
+        data.addColumn('number', 'Uploads');
+        
+        dailyData.reverse().forEach(d => {
+            data.addRow([d.date, d.count]);
+        });
+
+        var options = {
+            title: '',
+            curveType: 'function',
+            legend: { position: 'none' },
+            chartArea: { width: '85%', height: '70%' },
+            colors: ['#4285F4'],
+            vAxis: { 
+                minValue: 0,
+                format: '0'
+            },
+            hAxis: {
+                slantedText: true,
+                slantedTextAngle: 45
+            },
+            animation: {
+                startup: true,
+                duration: 1000,
+                easing: 'out'
+            },
+            pointSize: 5,
+            lineWidth: 3
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('activityChart'));
+        chart.draw(data, options);
+    }
+
+    // Confidence Ranges Bar Chart
+    function drawConfidenceRangesChart() {
+        const rangesData = {{ confidence_ranges|safe }};
+        
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Range');
+        data.addColumn('number', 'Images');
+        data.addColumn({type: 'string', role: 'style'});
+        
+        const colors = ['#EA4335', '#FF6F00', '#FBBC04', '#00897B', '#34A853'];
+        rangesData.forEach((r, i) => {
+            data.addRow([r.range, r.count, colors[i]]);
+        });
+
+        var options = {
+            title: '',
+            legend: { position: 'none' },
+            chartArea: { width: '85%', height: '70%' },
+            vAxis: { 
+                title: 'Number of Images',
+                minValue: 0,
+                format: '0'
+            },
+            hAxis: { 
+                title: 'Confidence Range'
+            },
+            animation: {
+                startup: true,
+                duration: 1000,
+                easing: 'out'
+            },
+            bar: { groupWidth: '85%' }
+        };
+
+        var chart = new google.visualization.ColumnChart(document.getElementById('confidenceRangesChart'));
+        chart.draw(data, options);
+    }
+
+    // Make charts responsive
+    window.addEventListener('resize', function() {
+        drawCharts();
     });
 </script>
 {% endblock %}
