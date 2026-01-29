@@ -1,0 +1,124 @@
+{% extends 'detector/base.html' %}
+
+{% block title %}Analytics Dashboard - AI Image Detector{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <h1>Analytics Dashboard (Simplified for Debugging)</h1>
+        
+        <!-- Data Check -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5>Data Check</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Total Images:</strong> {{ total_images }}</p>
+                <p><strong>Processed Images:</strong> {{ processed_images }}</p>
+                <p><strong>AI Images:</strong> {{ ai_images }}</p>
+                <p><strong>Real Images:</strong> {{ real_images }}</p>
+            </div>
+        </div>
+        
+        <!-- Simple Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Detection Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div id="simpleChart" style="width: 100%; height: 400px; background: #f9f9f9; border: 2px dashed #ccc;"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Test if JavaScript is working AT ALL
+    alert('JavaScript is working! This alert proves it.');
+    console.log('=== JAVASCRIPT TEST ===');
+    console.log('If you see this in console, JavaScript works!');
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+    console.log('=== DEBUGGING START ===');
+    console.log('ECharts loaded:', typeof echarts !== 'undefined');
+    console.log('ECharts version:', typeof echarts !== 'undefined' ? echarts.version : 'N/A');
+    
+    // Data from Django
+    const realImages = {{ real_images }};
+    const aiImages = {{ ai_images }};
+    console.log('Data - Real:', realImages, 'AI:', aiImages);
+    
+    // Wait for DOM
+    window.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded');
+        
+        const chartDom = document.getElementById('simpleChart');
+        console.log('Chart container:', chartDom);
+        console.log('Container size:', chartDom ? `${chartDom.offsetWidth}x${chartDom.offsetHeight}` : 'NULL');
+        
+        if (!chartDom) {
+            alert('ERROR: Chart container not found!');
+            return;
+        }
+        
+        if (typeof echarts === 'undefined') {
+            alert('ERROR: ECharts not loaded!');
+            chartDom.innerHTML = '<div style="padding: 20px; color: red;">ERROR: ECharts library failed to load from CDN</div>';
+            return;
+        }
+        
+        try {
+            console.log('Initializing chart...');
+            const myChart = echarts.init(chartDom);
+            console.log('Chart instance created:', myChart);
+            
+            const option = {
+                title: {
+                    text: 'Image Detection Results',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}: {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'horizontal',
+                    bottom: 10
+                },
+                series: [
+                    {
+                        name: 'Detection',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        data: [
+                            { value: realImages, name: 'Real Images', itemStyle: { color: '#34A853' } },
+                            { value: aiImages, name: 'AI Images', itemStyle: { color: '#EA4335' } }
+                        ],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            };
+            
+            console.log('Setting option...');
+            myChart.setOption(option);
+            console.log('✓ Chart rendered successfully!');
+            
+            chartDom.style.background = 'white';
+            chartDom.style.border = '1px solid #ddd';
+            
+        } catch(error) {
+            console.error('ERROR:', error);
+            alert('Chart error: ' + error.message);
+            chartDom.innerHTML = '<div style="padding: 20px; color: red;">ERROR: ' + error.message + '</div>';
+        }
+    });
+</script>
+{% endblock %}

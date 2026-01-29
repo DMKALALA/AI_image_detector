@@ -22,4 +22,6 @@ urlpatterns = [
     path('batch-results/', views.batch_results, name='batch_results'),
     path('individual-results/', views.individual_results, name='individual_results'),
     path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
+    path('analytics-simple/', views.analytics_simple, name='analytics_simple'),
+    path('chart-test/', views.chart_test, name='chart_test'),
 ]

@@ -45,6 +45,27 @@ If you're in a restricted environment, run tests directly on your machine:
 python manage.py test detector
 ```
 
+### Dataset Evaluation (Accuracy + Confidence)
+
+Create a labeled dataset with two folders:
+
+```
+dataset/
+  ai/
+  real/
+```
+
+Run the evaluation script:
+
+```bash
+export ENABLE_MODEL_IMPORTS=1
+python scripts/evaluate_dataset.py --ai-dir dataset/ai --real-dir dataset/real
+```
+
+Optional flags:
+- `--limit 50` to cap per-class samples
+- `--output evaluation_results.jsonl` to save per-image results
+
 ### Environment Variables
 
 **For Tests:**
@@ -116,4 +137,3 @@ class MyTest(TestCase):
 **Tests hang or timeout**
 - Ensure `OMP_NUM_THREADS=1` is set
 - Consider running tests outside the sandbox environment
-

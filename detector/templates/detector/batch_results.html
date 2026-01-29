@@ -47,9 +47,9 @@
                                             
                                             <div class="mb-2">
                                                 <strong>Confidence:</strong> {{ upload.confidence_percentage }}
-                                                <div class="progress mt-1" style="height: 8px;">
-                                                    <div class="progress-bar {% if upload.is_ai_generated %}bg-danger{% else %}bg-success{% endif %}" 
-                                                         style="width: {% widthratio upload.confidence_score 1 100 %}%"></div>
+                                                <div class="progress mt-1" style="height: 12px; border-radius: 6px; background-color: #f0f0f0;">
+                                                    <div class="progress-bar {% if upload.is_ai_generated %}bg-danger{% else %}bg-success{% endif %} progress-bar-animated progress-bar-striped" 
+                                                         style="width: {% widthratio upload.confidence_score 1 100 %}%; transition: width 1s ease-in-out;"></div>
                                                 </div>
                                             </div>
                                             

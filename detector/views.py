@@ -537,6 +537,30 @@ def analytics_dashboard(request):
     
     return render(request, 'detector/analytics_dashboard.html', context)
 
+def chart_test(request):
+    """Simple chart test page for debugging"""
+    return render(request, 'detector/chart_test.html')
+
+def analytics_simple(request):
+    """Simplified analytics dashboard for debugging"""
+    from django.db.models import Count, Avg, Q
+    
+    # Basic statistics
+    total_images = ImageUpload.objects.count()
+    processed_images = ImageUpload.objects.exclude(method__iexact='unknown').count()
+    processed_queryset = ImageUpload.objects.exclude(method__iexact='unknown')
+    ai_images = processed_queryset.filter(is_ai_generated=True).count()
+    real_images = processed_queryset.filter(is_ai_generated=False).count()
+    
+    context = {
+        'total_images': total_images,
+        'processed_images': processed_images,
+        'ai_images': ai_images,
+        'real_images': real_images,
+    }
+    
+    return render(request, 'detector/analytics_simple.html', context)
+
 @csrf_exempt
 def api_detect_realtime(request):
     """Real-time API endpoint for image detection (requires API key)"""

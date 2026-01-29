@@ -140,30 +140,8 @@
                         <h5 class="mb-0"><i class="fas fa-thumbs-up"></i> User Feedback</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-4 text-center">
-                                <h4 class="text-success">{{ correct_feedback }}</h4>
-                                <small>Correct</small>
-                            </div>
-                            <div class="col-4 text-center">
-                                <h4 class="text-danger">{{ incorrect_feedback }}</h4>
-                                <small>Incorrect</small>
-                            </div>
-                            <div class="col-4 text-center">
-                                <h4 class="text-warning">{{ unsure_feedback }}</h4>
-                                <small>Unsure</small>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <div class="progress">
-                                {% if total_feedback > 0 %}
-                                <div class="progress-bar bg-success" style="width: {% widthratio correct_feedback total_feedback 100 %}%"></div>
-                                <div class="progress-bar bg-danger" style="width: {% widthratio incorrect_feedback total_feedback 100 %}%"></div>
-                                <div class="progress-bar bg-warning" style="width: {% widthratio unsure_feedback total_feedback 100 %}%"></div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="mt-2">
+                        <div id="feedbackChart" style="width: 100%; height: 250px;"></div>
+                        <div class="mt-2 text-center">
                             <small class="text-muted">Feedback Rate: {{ feedback_rate|floatformat:1 }}%</small>
                         </div>
                     </div>
@@ -275,159 +253,426 @@
 {% endblock %}
 
 {% block extra_js %}
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <script type="text/javascript">
-    // Load Google Charts
-    google.charts.load('current', {'packages':['corechart', 'bar', 'line']});
-    google.charts.setOnLoadCallback(drawCharts);
+    // Initialize all charts when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        drawCharts();
+    });
 
     function drawCharts() {
         drawDetectionChart();
         drawConfidenceChart();
         drawActivityChart();
         drawConfidenceRangesChart();
+        drawFeedbackChart();
     }
 
-    // Detection Distribution Pie Chart
+    // Detection Distribution Donut Chart
     function drawDetectionChart() {
-        var data = google.visualization.arrayToDataTable([
-            ['Type', 'Count'],
-            ['Real Images', {{ real_images }}],
-            ['AI Images', {{ ai_images }}]
-        ]);
-
-        var options = {
-            title: '',
-            pieHole: 0.4,
-            colors: ['#34A853', '#EA4335'],
-            legend: { position: 'bottom' },
-            chartArea: { width: '90%', height: '75%' },
-            pieSliceText: 'value',
-            tooltip: { text: 'both' },
-            animation: {
-                startup: true,
-                duration: 1000,
-                easing: 'out'
-            }
+        const chartDom = document.getElementById('detectionChart');
+        const myChart = echarts.init(chartDom);
+        
+        const option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{a} <br/>{b}: {c} ({d}%)'
+            },
+            legend: {
+                orient: 'horizontal',
+                bottom: '0%',
+                left: 'center'
+            },
+            series: [
+                {
+                    name: 'Detection',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        formatter: '{c}'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: 20,
+                            fontWeight: 'bold'
+                        },
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    },
+                    labelLine: {
+                        show: true
+                    },
+                    data: [
+                        { 
+                            value: {{ real_images }}, 
+                            name: 'Real Images',
+                            itemStyle: { color: '#34A853' }
+                        },
+                        { 
+                            value: {{ ai_images }}, 
+                            name: 'AI Images',
+                            itemStyle: { color: '#EA4335' }
+                        }
+                    ],
+                    animationType: 'scale',
+                    animationEasing: 'elasticOut',
+                    animationDelay: function (idx) {
+                        return Math.random() * 200;
+                    }
+                }
+            ]
         };
-
-        var chart = new google.visualization.PieChart(document.getElementById('detectionChart'));
-        chart.draw(data, options);
+        
+        myChart.setOption(option);
+        window.detectionChart = myChart;
     }
 
     // Confidence Distribution Bar Chart
     function drawConfidenceChart() {
-        var data = google.visualization.arrayToDataTable([
-            ['Confidence Level', 'Images', { role: 'style' }],
-            ['High (80%+)', {{ high_confidence }}, '#34A853'],
-            ['Medium (50-80%)', {{ medium_confidence }}, '#FBBC04'],
-            ['Low (<50%)', {{ low_confidence }}, '#EA4335']
-        ]);
-
-        var options = {
-            title: '',
-            legend: { position: 'none' },
-            chartArea: { width: '80%', height: '70%' },
-            vAxis: { 
-                title: 'Number of Images',
-                minValue: 0,
-                format: '0'
+        const chartDom = document.getElementById('confidenceChart');
+        const myChart = echarts.init(chartDom);
+        
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
             },
-            hAxis: { 
-                title: 'Confidence Level'
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
             },
-            animation: {
-                startup: true,
-                duration: 1000,
-                easing: 'out'
+            xAxis: {
+                type: 'category',
+                data: ['High (80%+)', 'Medium (50-80%)', 'Low (<50%)'],
+                axisTick: {
+                    alignWithLabel: true
+                },
+                axisLabel: {
+                    interval: 0,
+                    rotate: 0
+                }
             },
-            bar: { groupWidth: '75%' }
+            yAxis: {
+                type: 'value',
+                name: 'Number of Images',
+                minInterval: 1
+            },
+            series: [
+                {
+                    name: 'Images',
+                    type: 'bar',
+                    barWidth: '60%',
+                    data: [
+                        {
+                            value: {{ high_confidence }},
+                            itemStyle: { 
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#34A853' },
+                                    { offset: 1, color: '#2d8f47' }
+                                ])
+                            }
+                        },
+                        {
+                            value: {{ medium_confidence }},
+                            itemStyle: { 
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#FBBC04' },
+                                    { offset: 1, color: '#e0a800' }
+                                ])
+                            }
+                        },
+                        {
+                            value: {{ low_confidence }},
+                            itemStyle: { 
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#EA4335' },
+                                    { offset: 1, color: '#d33b2e' }
+                                ])
+                            }
+                        }
+                    ],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    },
+                    animationDelay: function (idx) {
+                        return idx * 100;
+                    }
+                }
+            ],
+            animationEasing: 'elasticOut',
+            animationDelayUpdate: function (idx) {
+                return idx * 50;
+            }
         };
-
-        var chart = new google.visualization.ColumnChart(document.getElementById('confidenceChart'));
-        chart.draw(data, options);
+        
+        myChart.setOption(option);
+        window.confidenceChart = myChart;
     }
 
     // Activity Line Chart
     function drawActivityChart() {
+        const chartDom = document.getElementById('activityChart');
+        const myChart = echarts.init(chartDom);
         const dailyData = {{ daily_uploads|safe }};
         
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Date');
-        data.addColumn('number', 'Uploads');
+        // Prepare data
+        const dates = dailyData.reverse().map(d => d.date);
+        const counts = dailyData.map(d => d.count);
         
-        dailyData.reverse().forEach(d => {
-            data.addRow([d.date, d.count]);
-        });
-
-        var options = {
-            title: '',
-            curveType: 'function',
-            legend: { position: 'none' },
-            chartArea: { width: '85%', height: '70%' },
-            colors: ['#4285F4'],
-            vAxis: { 
-                minValue: 0,
-                format: '0'
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{b}<br/>Uploads: {c}'
             },
-            hAxis: {
-                slantedText: true,
-                slantedTextAngle: 45
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '15%',
+                containLabel: true
             },
-            animation: {
-                startup: true,
-                duration: 1000,
-                easing: 'out'
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: dates,
+                axisLabel: {
+                    rotate: 45,
+                    interval: 0
+                }
             },
-            pointSize: 5,
-            lineWidth: 3
+            yAxis: {
+                type: 'value',
+                name: 'Uploads',
+                minInterval: 1
+            },
+            series: [
+                {
+                    name: 'Uploads',
+                    type: 'line',
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 8,
+                    lineStyle: {
+                        width: 3,
+                        color: '#4285F4'
+                    },
+                    itemStyle: {
+                        color: '#4285F4',
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(66, 133, 244, 0.3)' },
+                            { offset: 1, color: 'rgba(66, 133, 244, 0.05)' }
+                        ])
+                    },
+                    data: counts,
+                    animationDelay: function (idx) {
+                        return idx * 20;
+                    }
+                }
+            ],
+            animationEasing: 'cubicOut'
         };
-
-        var chart = new google.visualization.LineChart(document.getElementById('activityChart'));
-        chart.draw(data, options);
+        
+        myChart.setOption(option);
+        window.activityChart = myChart;
     }
 
     // Confidence Ranges Bar Chart
     function drawConfidenceRangesChart() {
+        const chartDom = document.getElementById('confidenceRangesChart');
+        const myChart = echarts.init(chartDom);
         const rangesData = {{ confidence_ranges|safe }};
         
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Range');
-        data.addColumn('number', 'Images');
-        data.addColumn({type: 'string', role: 'style'});
-        
         const colors = ['#EA4335', '#FF6F00', '#FBBC04', '#00897B', '#34A853'];
-        rangesData.forEach((r, i) => {
-            data.addRow([r.range, r.count, colors[i]]);
-        });
-
-        var options = {
-            title: '',
-            legend: { position: 'none' },
-            chartArea: { width: '85%', height: '70%' },
-            vAxis: { 
-                title: 'Number of Images',
-                minValue: 0,
-                format: '0'
+        
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
             },
-            hAxis: { 
-                title: 'Confidence Range'
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
             },
-            animation: {
-                startup: true,
-                duration: 1000,
-                easing: 'out'
+            xAxis: {
+                type: 'category',
+                data: rangesData.map(r => r.range),
+                name: 'Confidence Range',
+                nameLocation: 'middle',
+                nameGap: 30,
+                axisTick: {
+                    alignWithLabel: true
+                }
             },
-            bar: { groupWidth: '85%' }
+            yAxis: {
+                type: 'value',
+                name: 'Number of Images',
+                minInterval: 1
+            },
+            series: [
+                {
+                    name: 'Images',
+                    type: 'bar',
+                    barWidth: '60%',
+                    data: rangesData.map((r, i) => ({
+                        value: r.count,
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: colors[i] },
+                                { offset: 1, color: colors[i] + 'cc' }
+                            ]),
+                            borderRadius: [5, 5, 0, 0]
+                        }
+                    })),
+                    label: {
+                        show: true,
+                        position: 'top',
+                        fontWeight: 'bold'
+                    },
+                    animationDelay: function (idx) {
+                        return idx * 100;
+                    }
+                }
+            ],
+            animationEasing: 'elasticOut'
         };
+        
+        myChart.setOption(option);
+        window.confidenceRangesChart = myChart;
+    }
 
-        var chart = new google.visualization.ColumnChart(document.getElementById('confidenceRangesChart'));
-        chart.draw(data, options);
+    // Feedback Bar Chart with Stacked Display
+    function drawFeedbackChart() {
+        const chartDom = document.getElementById('feedbackChart');
+        const myChart = echarts.init(chartDom);
+        
+        const correctCount = {{ correct_feedback }};
+        const incorrectCount = {{ incorrect_feedback }};
+        const unsureCount = {{ unsure_feedback }};
+        const totalFeedback = {{ total_feedback }};
+        
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                },
+                formatter: function(params) {
+                    let result = params[0].name + '<br/>';
+                    params.forEach(function(item) {
+                        const percent = totalFeedback > 0 ? ((item.value / totalFeedback) * 100).toFixed(1) : 0;
+                        result += item.marker + ' ' + item.seriesName + ': ' + item.value + ' (' + percent + '%)<br/>';
+                    });
+                    return result;
+                }
+            },
+            legend: {
+                data: ['Correct', 'Incorrect', 'Unsure'],
+                bottom: 0
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '15%',
+                top: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['Feedback'],
+                show: false
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Count'
+            },
+            series: [
+                {
+                    name: 'Correct',
+                    type: 'bar',
+                    stack: 'total',
+                    label: {
+                        show: true,
+                        formatter: '{c}'
+                    },
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#34A853' },
+                            { offset: 1, color: '#2d8f47' }
+                        ])
+                    },
+                    data: [correctCount],
+                    barWidth: '50%'
+                },
+                {
+                    name: 'Incorrect',
+                    type: 'bar',
+                    stack: 'total',
+                    label: {
+                        show: true,
+                        formatter: '{c}'
+                    },
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#EA4335' },
+                            { offset: 1, color: '#d33b2e' }
+                        ])
+                    },
+                    data: [incorrectCount]
+                },
+                {
+                    name: 'Unsure',
+                    type: 'bar',
+                    stack: 'total',
+                    label: {
+                        show: true,
+                        formatter: '{c}'
+                    },
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#FBBC04' },
+                            { offset: 1, color: '#e0a800' }
+                        ])
+                    },
+                    data: [unsureCount]
+                }
+            ],
+            animationEasing: 'elasticOut'
+        };
+        
+        myChart.setOption(option);
+        window.feedbackChart = myChart;
     }
 
     // Make charts responsive
     window.addEventListener('resize', function() {
-        drawCharts();
+        if (window.detectionChart) window.detectionChart.resize();
+        if (window.confidenceChart) window.confidenceChart.resize();
+        if (window.activityChart) window.activityChart.resize();
+        if (window.confidenceRangesChart) window.confidenceRangesChart.resize();
+        if (window.feedbackChart) window.feedbackChart.resize();
     });
 </script>
 {% endblock %}
