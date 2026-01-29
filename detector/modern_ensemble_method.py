@@ -186,6 +186,8 @@ class ModernEnsembleService:
                 probs = torch.exp(log_probs).cpu().numpy()[0]
             
             # Interpret results: class 0 = Real, class 1 = AI
+            # This label order is defined by the training process and
+            # is consistent with the checkpoint if loaded
             real_prob = float(probs[0])
             ai_prob = float(probs[1])
             

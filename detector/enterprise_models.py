@@ -23,6 +23,60 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
+def get_ai_probability_from_logits(model, probs):
+    """
+    Extract AI probability from model output, handling different label mappings.
+    
+    Args:
+        model: The model that produced the probabilities
+        probs: Softmax probabilities array
+        
+    Returns:
+        tuple: (ai_prob, real_prob)
+    """
+    # Check if model has config with label mapping
+    if hasattr(model, 'config') and hasattr(model.config, 'id2label'):
+        id2label = model.config.id2label
+        
+        # Find which index corresponds to AI/fake/generated
+        ai_keywords = ['ai', 'fake', 'generated', 'synthetic', 'artificial', 'deepfake']
+        real_keywords = ['real', 'authentic', 'genuine', 'human']
+        
+        ai_index = None
+        real_index = None
+        
+        for idx, label in id2label.items():
+            label_lower = str(label).lower()
+            if any(keyword in label_lower for keyword in ai_keywords):
+                ai_index = int(idx)
+            elif any(keyword in label_lower for keyword in real_keywords):
+                real_index = int(idx)
+        
+        # If we found the labels, use them
+        if ai_index is not None and real_index is not None:
+            ai_prob = float(probs[ai_index])
+            real_prob = float(probs[real_index])
+            logger.debug(f"Using label mapping: AI at index {ai_index}, Real at index {real_index}")
+            return ai_prob, real_prob
+        elif ai_index is not None:
+            ai_prob = float(probs[ai_index])
+            real_prob = 1.0 - ai_prob
+            logger.debug(f"Found AI label at index {ai_index}")
+            return ai_prob, real_prob
+        
+        logger.warning(f"Could not determine label mapping from id2label: {id2label}")
+    
+    # Default fallback: assume index 1 is AI, index 0 is real
+    # This is the common convention for most AI detection models
+    if len(probs) >= 2:
+        logger.debug("Using default mapping: index 0=real, index 1=AI")
+        return float(probs[1]), float(probs[0])
+    else:
+        # Single output - assume it's AI probability
+        ai_prob = float(probs[0])
+        return ai_prob, 1.0 - ai_prob
+
+
 class EnterpriseModelsEnsemble:
     """
     Additional enterprise-grade models for enhanced AI detection
@@ -56,18 +110,15 @@ class EnterpriseModelsEnsemble:
         except Exception as e:
             logger.warning(f"Could not load Hive-style model: {e}")
         
-        # Model 2: Reality Defender-style (using deepfake detection alternative)
+        # Model 2: Reality Defender-style (using a properly trained alternative)
         try:
-            # Using Swin Transformer for deepfake detection (modern architecture)
-            model_name = "microsoft/swin-tiny-patch4-window7-224"
+            # Use a model that is actually trained for AI/deepfake detection
+            # Option: umm-maybe/AI-image-detector (trained for AI image detection)
+            model_name = "umm-maybe/AI-image-detector"
             logger.info(f"Loading Reality Defender-style model: {model_name}")
             
             self.processors['reality_defender_style'] = AutoFeatureExtractor.from_pretrained(model_name)
-            model = AutoModelForImageClassification.from_pretrained(
-                model_name,
-                num_labels=2,  # Binary: Real vs AI
-                ignore_mismatched_sizes=True
-            )
+            model = AutoModelForImageClassification.from_pretrained(model_name)
             model.to(self.device)
             model.eval()
             self.models['reality_defender_style'] = model
@@ -75,6 +126,21 @@ class EnterpriseModelsEnsemble:
             logger.info("✓ Reality Defender-style model loaded successfully")
         except Exception as e:
             logger.warning(f"Could not load Reality Defender-style model: {e}")
+            logger.info("Trying alternative model...")
+            try:
+                # Fallback: try another trained model
+                model_name = "Organika/sdxl-detector"
+                logger.info(f"Loading alternative model: {model_name}")
+                
+                self.processors['reality_defender_style'] = AutoFeatureExtractor.from_pretrained(model_name)
+                model = AutoModelForImageClassification.from_pretrained(model_name)
+                model.to(self.device)
+                model.eval()
+                self.models['reality_defender_style'] = model
+                
+                logger.info("✓ Alternative Reality Defender-style model loaded successfully")
+            except Exception as e2:
+                logger.warning(f"Could not load alternative model either: {e2}")
         
         # Model 3: Sensity AI-style deepfake classifier
         try:
@@ -91,42 +157,14 @@ class EnterpriseModelsEnsemble:
         except Exception as e:
             logger.warning(f"Could not load Sensity-style model: {e}")
         
-        # Model 4: Additional community model - CLIP-based detector
-        try:
-            model_name = "openai/clip-vit-base-patch32"
-            logger.info(f"Loading CLIP-based detector: {model_name}")
-            
-            # CLIP requires special handling - we'll use it for feature extraction
-            # and add a classification head
-            from transformers import CLIPModel, CLIPProcessor
-            
-            self.processors['clip_detector'] = CLIPProcessor.from_pretrained(model_name)
-            clip_model = CLIPModel.from_pretrained(model_name)
-            
-            # Create a simple classifier on top of CLIP features
-            class CLIPClassifier(nn.Module):
-                def __init__(self, clip_model):
-                    super().__init__()
-                    self.clip = clip_model
-                    self.classifier = nn.Sequential(
-                        nn.Linear(512, 256),
-                        nn.ReLU(),
-                        nn.Dropout(0.3),
-                        nn.Linear(256, 2)
-                    )
-                
-                def forward(self, pixel_values):
-                    features = self.clip.get_image_features(pixel_values=pixel_values)
-                    return self.classifier(features)
-            
-            classifier = CLIPClassifier(clip_model)
-            classifier.to(self.device)
-            classifier.eval()
-            self.models['clip_detector'] = classifier
-            
-            logger.info("✓ CLIP-based detector loaded successfully")
-        except Exception as e:
-            logger.warning(f"Could not load CLIP detector: {e}")
+        # Model 4: Additional community model
+        # NOTE: Removed untrained CLIP classifier (was using random weights)
+        # CLIP with randomly initialized classification head produces meaningless results
+        # To use CLIP properly, we would need to:
+        # 1. Fine-tune the classification head on labeled AI-detection data, or
+        # 2. Use zero-shot classification with text prompts
+        # For now, we rely on the other trained models in the ensemble
+        logger.info("Skipping CLIP-based detector (requires fine-tuning for accurate results)")
         
         if not self.models:
             logger.warning("No enterprise models loaded successfully")
@@ -165,31 +203,17 @@ class EnterpriseModelsEnsemble:
                 try:
                     processor = self.processors[model_name]
                     
-                    # Handle CLIP differently
-                    if model_name == 'clip_detector':
-                        inputs = processor(images=image, return_tensors="pt")
-                        pixel_values = inputs['pixel_values'].to(self.device)
-                        
-                        with torch.no_grad():
-                            outputs = model(pixel_values)
-                            probs = torch.softmax(outputs, dim=1).cpu().numpy()[0]
-                    else:
-                        # Standard models
-                        inputs = processor(images=image, return_tensors="pt")
-                        inputs = {k: v.to(self.device) for k, v in inputs.items()}
-                        
-                        with torch.no_grad():
-                            outputs = model(**inputs)
-                            logits = outputs.logits
-                            probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
+                    # Standard models
+                    inputs = processor(images=image, return_tensors="pt")
+                    inputs = {k: v.to(self.device) for k, v in inputs.items()}
                     
-                    # Interpret results
-                    if len(probs) >= 2:
-                        real_prob = float(probs[0])
-                        ai_prob = float(probs[1])
-                    else:
-                        ai_prob = float(probs[0])
-                        real_prob = 1.0 - ai_prob
+                    with torch.no_grad():
+                        outputs = model(**inputs)
+                        logits = outputs.logits
+                        probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
+                    
+                    # Use proper label mapping
+                    ai_prob, real_prob = get_ai_probability_from_logits(model, probs)
                     
                     is_ai = ai_prob > 0.5
                     confidence = max(ai_prob, real_prob)
@@ -230,15 +254,14 @@ class EnterpriseModelsEnsemble:
                 f"Enterprise Ensemble: {'AI-generated' if is_ai_generated else 'Real'}",
                 f"Ensemble AI probability: {ensemble_ai_prob*100:.1f}%",
                 f"Ensemble Real probability: {ensemble_real_prob*100:.1f}%",
-                f"Models used: {len(model_predictions)}/4"
+                f"Models used: {len(model_predictions)}/3"
             ]
             
             # Add individual model results
             model_labels = {
                 'hive_style': 'Hive-style CNN Classifier',
-                'reality_defender_style': 'Reality Defender-style (Swin)',
-                'sensity_style': 'Sensity-style Deepfake Detector',
-                'clip_detector': 'CLIP-based Detector'
+                'reality_defender_style': 'Reality Defender-style Detector',
+                'sensity_style': 'Sensity-style Deepfake Detector'
             }
             
             for model_name, pred in model_predictions.items():

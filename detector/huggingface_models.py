@@ -21,6 +21,60 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
+def get_ai_probability_from_logits(model, probs):
+    """
+    Extract AI probability from model output, handling different label mappings.
+    
+    Args:
+        model: The model that produced the probabilities
+        probs: Softmax probabilities array
+        
+    Returns:
+        tuple: (ai_prob, real_prob)
+    """
+    # Check if model has config with label mapping
+    if hasattr(model, 'config') and hasattr(model.config, 'id2label'):
+        id2label = model.config.id2label
+        
+        # Find which index corresponds to AI/fake/generated
+        ai_keywords = ['ai', 'fake', 'generated', 'synthetic', 'artificial', 'deepfake']
+        real_keywords = ['real', 'authentic', 'genuine', 'human']
+        
+        ai_index = None
+        real_index = None
+        
+        for idx, label in id2label.items():
+            label_lower = str(label).lower()
+            if any(keyword in label_lower for keyword in ai_keywords):
+                ai_index = int(idx)
+            elif any(keyword in label_lower for keyword in real_keywords):
+                real_index = int(idx)
+        
+        # If we found the labels, use them
+        if ai_index is not None and real_index is not None:
+            ai_prob = float(probs[ai_index])
+            real_prob = float(probs[real_index])
+            logger.debug(f"Using label mapping from config: AI at index {ai_index}, Real at index {real_index}")
+            return ai_prob, real_prob
+        elif ai_index is not None:
+            ai_prob = float(probs[ai_index])
+            real_prob = 1.0 - ai_prob
+            logger.debug(f"Found AI label at index {ai_index}")
+            return ai_prob, real_prob
+        
+        logger.debug(f"Label mapping unclear from id2label: {id2label}, using default")
+    
+    # Default fallback: assume index 1 is AI, index 0 is real
+    # This is the common convention for most AI detection models
+    if len(probs) >= 2:
+        logger.debug("Using default mapping: index 0=real, index 1=AI")
+        return float(probs[1]), float(probs[0])
+    else:
+        # Single output - assume it's AI probability
+        ai_prob = float(probs[0])
+        return ai_prob, 1.0 - ai_prob
+
+
 class HuggingFaceEnsemble:
     """
     Ensemble of specialized Hugging Face models for AI image detection
@@ -152,16 +206,8 @@ class HuggingFaceEnsemble:
                         logits = outputs.logits
                         probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
                     
-                    # Interpret results
-                    # Most models: class 0 = real, class 1 = fake/AI
-                    # Check config to be sure, but this is common convention
-                    if len(probs) >= 2:
-                        real_prob = float(probs[0])
-                        ai_prob = float(probs[1])
-                    else:
-                        # Binary output, single value
-                        ai_prob = float(probs[0])
-                        real_prob = 1.0 - ai_prob
+                    # Use proper label mapping
+                    ai_prob, real_prob = get_ai_probability_from_logits(model, probs)
                     
                     is_ai = ai_prob > 0.5
                     confidence = max(ai_prob, real_prob)

@@ -2,6 +2,13 @@
 Improved Method 1: Specialized Deep Learning Model for AI Image Detection
 Uses pre-trained models specifically designed for synthetic/AI-generated image detection
 Based on state-of-the-art research and publicly available models
+
+IMPORTANT: This implementation loads ImageNet pre-trained backbones and adds
+untrained classification heads. For production use, these models should be:
+1. Fine-tuned on AI-detection datasets, OR
+2. Replaced with models pre-trained specifically for AI/deepfake detection
+
+The current implementation may produce unreliable results due to random classifier weights.
 """
 
 import torch
@@ -199,6 +206,9 @@ class ImprovedDeepLearningMethod1:
                     output = model(input_tensor)
                     probs = torch.softmax(output, dim=1).cpu().numpy()[0]
                     
+                    # Label order: index 0 = Real, index 1 = AI
+                    # This is consistent because we built these classifiers ourselves
+                    # with nn.Linear(..., 2) where the output order is [real_logit, ai_logit]
                     real_prob = float(probs[0])
                     ai_prob = float(probs[1])
                     
@@ -229,7 +239,8 @@ class ImprovedDeepLearningMethod1:
                 f"Ensemble prediction: {'AI-generated' if is_ai_generated else 'Real'}",
                 f"Overall confidence: {confidence*100:.1f}%",
                 f"AI probability: {ai_prob*100:.1f}%",
-                f"Real probability: {real_prob*100:.1f}%"
+                f"Real probability: {real_prob*100:.1f}%",
+                "⚠️ Note: Classification heads require fine-tuning for optimal accuracy"
             ]
             
             indicators.append(f"Models used: {', '.join(self.models.keys())}")
