@@ -63,3 +63,4 @@ genimage_data/
 *.tmp
 *.bak
 feedback_memory.json
+.env
