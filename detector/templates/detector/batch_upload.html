@@ -64,11 +64,27 @@
                         
                         <!-- Progress Section -->
                         <div id="progressSection" style="display: none;" class="mt-4">
-                            <h5>Processing Images...</h5>
-                            <div class="progress mb-3" style="height: 32px; border-radius: 16px; background: linear-gradient(90deg, #f5f5f5, #e8e8e8); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 16px; box-shadow: 0 2px 8px rgba(66, 133, 244, 0.4);"></div>
+                            <div class="card shadow">
+                                <div class="card-body">
+                                    <div class="text-center mb-4">
+                                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-cloud-upload-alt me-2"></i>Processing Images
+                                        </h5>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 36px; border-radius: 18px; background: linear-gradient(90deg, #f5f5f5, #e8e8e8); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 18px; box-shadow: 0 2px 8px rgba(66, 133, 244, 0.4);">0%</div>
+                                    </div>
+                                    <div id="progressText" class="text-center" style="font-size: 16px; font-weight: 600; color: #4285F4;">
+                                        Preparing upload...
+                                    </div>
+                                    <div id="progressDetails" class="text-center mt-2" style="font-size: 14px; color: #666;">
+                                        <span id="processedCount">0</span> / <span id="totalCount">0</span> images processed
+                                    </div>
+                                </div>
                             </div>
-                            <div id="progressText" class="text-center" style="font-size: 18px; font-weight: 600; color: #4285F4;">Preparing...</div>
                         </div>
                         
                         <!-- Results Section -->
@@ -292,19 +308,26 @@
         document.getElementById('resultsSection').style.display = 'none';
         document.getElementById('uploadBtn').disabled = true;
         
+        // Set total count
+        document.getElementById('totalCount').textContent = filesToProcess.length;
+        
         // Simulate progress updates
         let progress = 0;
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
+        const processedCount = document.getElementById('processedCount');
         
         const progressInterval = setInterval(() => {
             progress += Math.random() * 15;
             if (progress > 90) progress = 90;
             
             const roundedProgress = Math.round(progress);
+            const estimatedProcessed = Math.floor((roundedProgress / 100) * filesToProcess.length);
+            
             progressBar.style.width = progress + '%';
             progressBar.textContent = roundedProgress + '%';
-            progressText.textContent = `Processing images... ${roundedProgress}%`;
+            progressText.textContent = `Analyzing images with AI models...`;
+            processedCount.textContent = estimatedProcessed;
         }, 200);
         
         // Submit form
@@ -328,8 +351,9 @@
             progressBar.style.width = '100%';
             progressBar.textContent = '100%';
             progressBar.style.background = 'linear-gradient(90deg, #34A853, #2d8f47)';
-            progressText.textContent = 'Complete!';
+            progressText.innerHTML = '<i class="fas fa-check-circle me-2"></i>All images processed successfully!';
             progressText.style.color = '#34A853';
+            processedCount.textContent = filesToProcess.length;
             
             setTimeout(() => {
                 displayResults(data);

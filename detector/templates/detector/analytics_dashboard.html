@@ -358,19 +358,50 @@
             },
             xAxis: {
                 type: 'category',
-                data: ['High (80%+)', 'Medium (50-80%)', 'Low (<50%)'],
+                data: ['High\n(≥80%)', 'Medium\n(50-80%)', 'Low\n(<50%)'],
                 axisTick: {
                     alignWithLabel: true
                 },
                 axisLabel: {
                     interval: 0,
-                    rotate: 0
+                    rotate: 0,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: '#333',
+                    margin: 12
+                },
+                axisLine: {
+                    lineStyle: {
+                        color: '#ddd'
+                    }
                 }
             },
             yAxis: {
                 type: 'value',
                 name: 'Number of Images',
-                minInterval: 1
+                nameLocation: 'middle',
+                nameGap: 50,
+                nameTextStyle: {
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: '#333'
+                },
+                minInterval: 1,
+                axisLabel: {
+                    fontSize: 12,
+                    color: '#666'
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#ddd'
+                    }
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#f0f0f0'
+                    }
+                }
             },
             series: [
                 {
@@ -450,15 +481,53 @@
                 type: 'category',
                 boundaryGap: false,
                 data: dates,
+                name: 'Date',
+                nameLocation: 'middle',
+                nameGap: 45,
+                nameTextStyle: {
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: '#333'
+                },
                 axisLabel: {
                     rotate: 45,
-                    interval: 0
+                    interval: 0,
+                    fontSize: 11,
+                    color: '#666',
+                    margin: 10
+                },
+                axisLine: {
+                    lineStyle: {
+                        color: '#ddd'
+                    }
                 }
             },
             yAxis: {
                 type: 'value',
-                name: 'Uploads',
-                minInterval: 1
+                name: 'Number of Uploads',
+                nameLocation: 'middle',
+                nameGap: 50,
+                nameTextStyle: {
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: '#333'
+                },
+                minInterval: 1,
+                axisLabel: {
+                    fontSize: 12,
+                    color: '#666'
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#ddd'
+                    }
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#f0f0f0'
+                    }
+                }
             },
             series: [
                 {
@@ -521,15 +590,53 @@
                 data: rangesData.map(r => r.range),
                 name: 'Confidence Range',
                 nameLocation: 'middle',
-                nameGap: 30,
+                nameGap: 40,
+                nameTextStyle: {
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: '#333'
+                },
                 axisTick: {
                     alignWithLabel: true
+                },
+                axisLabel: {
+                    fontSize: 12,
+                    color: '#666',
+                    interval: 0,
+                    rotate: 20
+                },
+                axisLine: {
+                    lineStyle: {
+                        color: '#ddd'
+                    }
                 }
             },
             yAxis: {
                 type: 'value',
                 name: 'Number of Images',
-                minInterval: 1
+                nameLocation: 'middle',
+                nameGap: 50,
+                nameTextStyle: {
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: '#333'
+                },
+                minInterval: 1,
+                axisLabel: {
+                    fontSize: 12,
+                    color: '#666'
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#ddd'
+                    }
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#f0f0f0'
+                    }
+                }
             },
             series: [
                 {
@@ -606,7 +713,29 @@
             },
             yAxis: {
                 type: 'value',
-                name: 'Count'
+                name: 'Number of Responses',
+                nameLocation: 'middle',
+                nameGap: 50,
+                nameTextStyle: {
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: '#333'
+                },
+                axisLabel: {
+                    fontSize: 12,
+                    color: '#666'
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#ddd'
+                    }
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#f0f0f0'
+                    }
+                }
             },
             series: [
                 {
