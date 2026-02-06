@@ -70,6 +70,17 @@ class ImprovedDeepLearningMethod1:
                     nn.Dropout(0.2),
                     nn.Linear(128, 2)
                 )
+                
+                # Try to load fine-tuned weights
+                checkpoint_path = 'trained_models/efficientnet_b0_finetuned.pth'
+                if os.path.exists(checkpoint_path):
+                    checkpoint = torch.load(checkpoint_path, map_location=self.device)
+                    model1.load_state_dict(checkpoint['model_state_dict'])
+                    best_acc = checkpoint.get('best_val_acc', 0)
+                    logger.info(f"✓ Loaded EfficientNet-B0 with fine-tuned weights (val acc: {best_acc:.1f}%)")
+                else:
+                    logger.warning("Fine-tuned weights not found, using random classifier (NEEDS TRAINING)")
+                
                 model1.to(self.device)
                 model1.eval()
                 self.models['efficientnet_b0'] = model1
@@ -100,6 +111,14 @@ class ImprovedDeepLearningMethod1:
                 nn.Dropout(0.3),
                 nn.Linear(512, 2)  # Real vs AI
             )
+            
+            # Try to load fine-tuned weights
+            checkpoint_path = 'trained_models/efficientnet_b4_finetuned.pth'
+            if os.path.exists(checkpoint_path):
+                checkpoint = torch.load(checkpoint_path, map_location=self.device)
+                model1.load_state_dict(checkpoint['model_state_dict'])
+                logger.info(f"✓ Loaded EfficientNet-B4 with fine-tuned weights")
+            
             model1.to(self.device)
             model1.eval()
             self.models['efficientnet_b4'] = model1
@@ -239,9 +258,15 @@ class ImprovedDeepLearningMethod1:
                 f"Ensemble prediction: {'AI-generated' if is_ai_generated else 'Real'}",
                 f"Overall confidence: {confidence*100:.1f}%",
                 f"AI probability: {ai_prob*100:.1f}%",
-                f"Real probability: {real_prob*100:.1f}%",
-                "⚠️ Note: Classification heads require fine-tuning for optimal accuracy"
+                f"Real probability: {real_prob*100:.1f}%"
             ]
+            
+            # Check if using fine-tuned model
+            checkpoint_exists = os.path.exists('trained_models/efficientnet_b0_finetuned.pth')
+            if checkpoint_exists:
+                indicators.append("✓ Using fine-tuned model (trained on user feedback)")
+            else:
+                indicators.append("⚠️ Note: Classification heads require fine-tuning for optimal accuracy")
             
             indicators.append(f"Models used: {', '.join(self.models.keys())}")
             
