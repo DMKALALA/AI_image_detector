@@ -17,7 +17,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 ALLOWED_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
 ALLOWED_MIME_TYPES = {
     'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 
-    'image/bmp', 'image/webp'
+    'image/bmp', 'image/webp', 'image/tiff', 'image/mpo'
 }
 
 def sanitize_filename(filename: str) -> str:
@@ -88,8 +88,17 @@ def validate_image_file(file, check_content: bool = True) -> Tuple[bool, Optiona
                 return False, 'Invalid image dimensions'
             
             # Check file format
-            if image.format not in ['JPEG', 'PNG', 'GIF', 'BMP', 'WEBP']:
+            # MPO (Multi-Picture Object) is used by iPhones/cameras for HDR and Live Photos
+            # TIFF is used by some cameras and scanners
+            # These are all safe image formats that can be converted to RGB
+            allowed_formats = ['JPEG', 'PNG', 'GIF', 'BMP', 'WEBP', 'MPO', 'TIFF']
+            if image.format not in allowed_formats:
                 return False, f'Unsupported image format: {image.format}'
+            
+            # Convert MPO/TIFF to standard format for compatibility
+            if image.format in ['MPO', 'TIFF']:
+                image = image.convert('RGB')
+                logger.info(f"Converted {image.format} image to RGB for compatibility")
             
             file.seek(0)
             
