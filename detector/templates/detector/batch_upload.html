@@ -87,8 +87,8 @@
                                     </div>
                                     
                                     <!-- Progress bar -->
-                                    <div class="progress mb-3" style="height: 30px; border-radius: 15px; background: #eee; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 15px; font-weight: bold; line-height: 30px; text-align: center; border-radius: 15px; transition: width 0.4s ease; color: #fff;">0%</div>
+                                    <div class="progress mb-3" style="height: 40px; border-radius: 20px; background: #eee; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 16px; font-weight: 700; line-height: 40px; text-align: center; transition: width 0.4s ease; color: #fff; min-width: 40px;">0%</div>
                                     </div>
                                     
                                     <div id="progressText" class="text-center" style="font-size: 16px; font-weight: 600; color: #4285F4;">
@@ -380,10 +380,10 @@
             // Upload finished — move to step 2: server-side analysis
             setStep(2);
             progressBar.style.width = '100%';
-            progressBar.textContent = '';
+            progressBar.textContent = 'Analyzing...';
             progressBar.classList.add('progress-bar-animated', 'progress-bar-striped');
             progressBar.style.background = 'linear-gradient(90deg, #FBBC04, #FF9800)';
-            progressText.textContent = 'AI models analyzing ' + totalFiles + ' image' + (totalFiles > 1 ? 's' : '') + '...';
+            progressText.textContent = 'AI models analyzing ' + totalFiles + ' image' + (totalFiles > 1 ? 's' : '') + ' — please wait...';
             processedCount.textContent = totalFiles;
         });
         
@@ -451,21 +451,37 @@
             if (result.success) {
                 const statusClass = result.is_ai_generated ? 'danger' : 'success';
                 const statusText = result.is_ai_generated ? 'AI-Generated' : 'Real';
+                const statusIcon = result.is_ai_generated ? 'fa-robot' : 'fa-camera';
                 const confidence = Math.round(result.confidence * 100);
-                const previewImage = result.image_url ? `<img src="${result.image_url}" alt="${result.filename}" class="img-fluid mb-2 rounded">` : '';
+                const previewImage = result.image_url ? `<img src="${result.image_url}" alt="${result.filename}" class="img-fluid mb-2 rounded" style="max-height: 160px; width: 100%; object-fit: cover;">` : '';
                 
                 html += `
                     <div class="col-md-6 col-lg-4 mb-3">
-                        <div class="card">
-                            <div class="card-header bg-${statusClass} text-white">
-                                <h6 class="mb-0">${result.filename}</h6>
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-${statusClass} text-white py-2">
+                                <h6 class="mb-0 text-truncate" title="${result.filename}"><i class="fas ${statusIcon} me-1"></i> ${result.filename}</h6>
                             </div>
                             <div class="card-body">
                                 ${previewImage}
-                                <p class="mb-1"><strong>Result:</strong> ${statusText}</p>
-                                <p class="mb-1"><strong>Confidence:</strong> ${confidence}%</p>
-                                <a href="/result/${result.id}/" class="btn btn-sm btn-outline-primary">
-                                    View Details
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-${statusClass}" style="font-size: 13px; padding: 6px 12px;">
+                                        <i class="fas ${statusIcon} me-1"></i>${statusText}
+                                    </span>
+                                    <span class="fw-bold" style="font-size: 18px; color: ${result.is_ai_generated ? '#EA4335' : '#34A853'};">
+                                        ${confidence}%
+                                    </span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1" style="font-size: 12px; color: #888;">
+                                        <span>Confidence</span>
+                                        <span>${confidence}%</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px; border-radius: 5px; background: #eee;">
+                                        <div class="progress-bar bg-${statusClass}" role="progressbar" style="width: ${confidence}%; border-radius: 5px; transition: width 1s ease;"></div>
+                                    </div>
+                                </div>
+                                <a href="/result/${result.id}/" class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="fas fa-eye me-1"></i> View Details
                                 </a>
                             </div>
                         </div>
