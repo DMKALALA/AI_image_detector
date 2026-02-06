@@ -65,31 +65,42 @@
                         <!-- Progress Section -->
                         <div id="progressSection" style="display: none;" class="mt-4">
                             <div class="card shadow">
-                                <div class="card-body">
-                                    <div class="text-center mb-3">
-                                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                                            <span class="visually-hidden">Loading...</span>
+                                <div class="card-body py-4">
+                                    <!-- Step indicators -->
+                                    <div class="d-flex justify-content-center mb-4">
+                                        <div class="d-flex align-items-center">
+                                            <div id="step1" class="d-flex align-items-center">
+                                                <span class="badge rounded-pill bg-primary" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">1</span>
+                                                <span class="ms-2 fw-bold text-primary" style="font-size: 14px;">Upload</span>
+                                            </div>
+                                            <div style="width: 40px; height: 2px; background: #dee2e6; margin: 0 10px;"></div>
+                                            <div id="step2" class="d-flex align-items-center">
+                                                <span class="badge rounded-pill bg-secondary" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">2</span>
+                                                <span class="ms-2 text-muted" style="font-size: 14px;">Analyze</span>
+                                            </div>
+                                            <div style="width: 40px; height: 2px; background: #dee2e6; margin: 0 10px;"></div>
+                                            <div id="step3" class="d-flex align-items-center">
+                                                <span class="badge rounded-pill bg-secondary" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">3</span>
+                                                <span class="ms-2 text-muted" style="font-size: 14px;">Done</span>
+                                            </div>
                                         </div>
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-cloud-upload-alt me-2"></i>Processing Images
-                                        </h5>
                                     </div>
                                     
-                                    <!-- Phase indicator -->
-                                    <div class="d-flex justify-content-between mb-2 px-1" style="font-size: 12px; color: #999;">
-                                        <span>Upload</span>
-                                        <span>AI Analysis</span>
-                                        <span>Complete</span>
+                                    <!-- Progress bar -->
+                                    <div class="progress mb-3" style="height: 30px; border-radius: 15px; background: #eee; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 15px; transition: width 0.4s ease;">0%</div>
                                     </div>
                                     
-                                    <div class="progress mb-3" style="height: 36px; border-radius: 18px; background: linear-gradient(90deg, #f5f5f5, #e8e8e8); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 18px; box-shadow: 0 2px 8px rgba(66, 133, 244, 0.4); transition: width 0.3s ease;">0%</div>
-                                    </div>
                                     <div id="progressText" class="text-center" style="font-size: 16px; font-weight: 600; color: #4285F4;">
-                                        Preparing upload...
+                                        Preparing...
                                     </div>
-                                    <div id="progressDetails" class="text-center mt-2" style="font-size: 14px; color: #666;">
+                                    <div id="progressDetails" class="text-center mt-1" style="font-size: 14px; color: #888;">
                                         <span id="processedCount">0</span> / <span id="totalCount">0</span> images
+                                    </div>
+                                    
+                                    <!-- Elapsed timer -->
+                                    <div id="elapsedTime" class="text-center mt-2" style="font-size: 13px; color: #aaa;">
+                                        Elapsed: 0s
                                     </div>
                                 </div>
                             </div>
@@ -316,122 +327,113 @@
         document.getElementById('resultsSection').style.display = 'none';
         document.getElementById('uploadBtn').disabled = true;
         
-        // Set total count
         const totalFiles = filesToProcess.length;
         document.getElementById('totalCount').textContent = totalFiles;
         
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
         const processedCount = document.getElementById('processedCount');
+        const elapsedTime = document.getElementById('elapsedTime');
         
-        // Use XMLHttpRequest for real upload progress tracking
+        // Step indicator helpers
+        function setStep(stepNum) {
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById('step' + i);
+                const badge = step.querySelector('.badge');
+                const label = step.querySelector('span:last-child');
+                if (i < stepNum) {
+                    badge.className = 'badge rounded-pill bg-success';
+                    badge.innerHTML = '<i class="fas fa-check" style="font-size:12px"></i>';
+                    label.className = 'ms-2 fw-bold text-success';
+                } else if (i === stepNum) {
+                    badge.className = 'badge rounded-pill bg-primary';
+                    label.className = 'ms-2 fw-bold text-primary';
+                } else {
+                    badge.className = 'badge rounded-pill bg-secondary';
+                    label.className = 'ms-2 text-muted';
+                }
+            }
+        }
+        
+        // Elapsed time counter
+        const startTime = Date.now();
+        const timerInterval = setInterval(() => {
+            const elapsed = Math.round((Date.now() - startTime) / 1000);
+            elapsedTime.textContent = `Elapsed: ${elapsed}s`;
+        }, 1000);
+        
+        // --- STEP 1: Upload via XMLHttpRequest ---
+        setStep(1);
         const xhr = new XMLHttpRequest();
         
-        // Phase 1: Upload progress (0% - 50%)
-        // This tracks actual bytes sent to the server
-        let uploadComplete = false;
         xhr.upload.addEventListener('progress', function(e) {
             if (e.lengthComputable) {
-                const uploadPercent = Math.round((e.loaded / e.total) * 50);
-                const uploaded = Math.floor((e.loaded / e.total) * totalFiles);
-                
-                progressBar.style.width = uploadPercent + '%';
-                progressBar.textContent = uploadPercent + '%';
-                progressText.textContent = 'Uploading images...';
-                processedCount.textContent = uploaded;
+                const pct = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = pct + '%';
+                progressBar.textContent = pct + '%';
+                progressText.textContent = 'Uploading ' + totalFiles + ' image' + (totalFiles > 1 ? 's' : '') + '...';
+                processedCount.textContent = Math.floor((e.loaded / e.total) * totalFiles);
             }
         });
         
         xhr.upload.addEventListener('load', function() {
-            uploadComplete = true;
-            progressBar.style.width = '50%';
-            progressBar.textContent = '50%';
-            progressText.textContent = 'Analyzing images with AI models...';
+            // Upload finished — move to step 2: server-side analysis
+            setStep(2);
+            progressBar.style.width = '100%';
+            progressBar.textContent = '';
+            progressBar.classList.add('progress-bar-animated', 'progress-bar-striped');
+            progressBar.style.background = 'linear-gradient(90deg, #FBBC04, #FF9800)';
+            progressText.textContent = 'AI models analyzing ' + totalFiles + ' image' + (totalFiles > 1 ? 's' : '') + '...';
             processedCount.textContent = totalFiles;
         });
         
-        // Phase 2: Server processing (50% - 95%)
-        // Estimate based on ~3 seconds per image
-        let processingInterval = null;
-        xhr.upload.addEventListener('load', function() {
-            let processingProgress = 50;
-            const estimatedTimePerImage = 3000; // 3 seconds per image
-            const totalEstimatedTime = totalFiles * estimatedTimePerImage;
-            const incrementInterval = 500; // update every 0.5s
-            const incrementAmount = (45 * incrementInterval) / totalEstimatedTime;
-            
-            processingInterval = setInterval(() => {
-                processingProgress += incrementAmount;
-                if (processingProgress > 95) processingProgress = 95;
-                
-                const roundedProgress = Math.round(processingProgress);
-                const estimatedDone = Math.min(
-                    Math.floor(((processingProgress - 50) / 45) * totalFiles),
-                    totalFiles
-                );
-                
-                progressBar.style.width = roundedProgress + '%';
-                progressBar.textContent = roundedProgress + '%';
-                progressText.textContent = `Analyzing images with AI models... (${estimatedDone}/${totalFiles})`;
-            }, incrementInterval);
-        });
-        
-        // Phase 3: Complete
+        // --- STEP 3: Server response ---
         xhr.addEventListener('load', function() {
-            if (processingInterval) clearInterval(processingInterval);
+            clearInterval(timerInterval);
+            const elapsed = Math.round((Date.now() - startTime) / 1000);
+            elapsedTime.textContent = `Completed in ${elapsed}s`;
             
             if (xhr.status >= 200 && xhr.status < 300) {
                 try {
                     const data = JSON.parse(xhr.responseText);
-                    
+                    setStep(3);
+                    progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
                     progressBar.style.width = '100%';
                     progressBar.textContent = '100%';
                     progressBar.style.background = 'linear-gradient(90deg, #34A853, #2d8f47)';
-                    progressText.innerHTML = '<i class="fas fa-check-circle me-2"></i>All images processed successfully!';
+                    progressText.innerHTML = '<i class="fas fa-check-circle me-2"></i>All ' + totalFiles + ' images processed!';
                     progressText.style.color = '#34A853';
-                    processedCount.textContent = totalFiles;
                     
-                    setTimeout(() => {
-                        displayResults(data);
-                    }, 500);
-                } catch (parseError) {
-                    progressText.textContent = 'Error: Invalid response from server';
+                    setTimeout(() => { displayResults(data); }, 600);
+                } catch (e) {
+                    progressText.textContent = 'Error: Invalid server response';
                     progressText.style.color = '#EA4335';
-                    progressBar.style.background = 'linear-gradient(90deg, #EA4335, #d33b2e)';
+                    progressBar.style.background = '#EA4335';
                 }
             } else {
-                let errorMsg = 'Server error';
-                try {
-                    const errData = JSON.parse(xhr.responseText);
-                    errorMsg = errData.error || `Server error: ${xhr.status}`;
-                } catch (e) {
-                    errorMsg = `Server error: ${xhr.status}`;
-                }
-                progressText.textContent = 'Error: ' + errorMsg;
+                let msg = 'Server error';
+                try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
+                progressText.textContent = 'Error: ' + msg;
                 progressText.style.color = '#EA4335';
-                progressBar.style.background = 'linear-gradient(90deg, #EA4335, #d33b2e)';
+                progressBar.style.background = '#EA4335';
             }
         });
         
-        // Handle network errors
         xhr.addEventListener('error', function() {
-            if (processingInterval) clearInterval(processingInterval);
-            progressText.textContent = 'Error: Network error - check your connection';
+            clearInterval(timerInterval);
+            progressText.textContent = 'Network error — check your connection';
             progressText.style.color = '#EA4335';
-            progressBar.style.background = 'linear-gradient(90deg, #EA4335, #d33b2e)';
+            progressBar.style.background = '#EA4335';
         });
         
-        // Handle timeout
         xhr.addEventListener('timeout', function() {
-            if (processingInterval) clearInterval(processingInterval);
-            progressText.textContent = 'Error: Request timed out - images may still be processing';
+            clearInterval(timerInterval);
+            progressText.textContent = 'Request timed out — images may still be processing';
             progressText.style.color = '#EA4335';
-            progressBar.style.background = 'linear-gradient(90deg, #EA4335, #d33b2e)';
         });
         
-        // Send the request
         xhr.open('POST', '{% url "detector:batch_upload" %}');
-        xhr.timeout = 300000; // 5 minute timeout
+        xhr.timeout = 300000;
         xhr.send(formData);
     });
     
