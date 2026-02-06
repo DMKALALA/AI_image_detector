@@ -66,7 +66,7 @@
                         <div id="progressSection" style="display: none;" class="mt-4">
                             <div class="card shadow">
                                 <div class="card-body">
-                                    <div class="text-center mb-4">
+                                    <div class="text-center mb-3">
                                         <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
                                             <span class="visually-hidden">Loading...</span>
                                         </div>
@@ -74,14 +74,22 @@
                                             <i class="fas fa-cloud-upload-alt me-2"></i>Processing Images
                                         </h5>
                                     </div>
+                                    
+                                    <!-- Phase indicator -->
+                                    <div class="d-flex justify-content-between mb-2 px-1" style="font-size: 12px; color: #999;">
+                                        <span>Upload</span>
+                                        <span>AI Analysis</span>
+                                        <span>Complete</span>
+                                    </div>
+                                    
                                     <div class="progress mb-3" style="height: 36px; border-radius: 18px; background: linear-gradient(90deg, #f5f5f5, #e8e8e8); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 18px; box-shadow: 0 2px 8px rgba(66, 133, 244, 0.4);">0%</div>
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 18px; box-shadow: 0 2px 8px rgba(66, 133, 244, 0.4); transition: width 0.3s ease;">0%</div>
                                     </div>
                                     <div id="progressText" class="text-center" style="font-size: 16px; font-weight: 600; color: #4285F4;">
                                         Preparing upload...
                                     </div>
                                     <div id="progressDetails" class="text-center mt-2" style="font-size: 14px; color: #666;">
-                                        <span id="processedCount">0</span> / <span id="totalCount">0</span> images processed
+                                        <span id="processedCount">0</span> / <span id="totalCount">0</span> images
                                     </div>
                                 </div>
                             </div>
@@ -309,62 +317,122 @@
         document.getElementById('uploadBtn').disabled = true;
         
         // Set total count
-        document.getElementById('totalCount').textContent = filesToProcess.length;
+        const totalFiles = filesToProcess.length;
+        document.getElementById('totalCount').textContent = totalFiles;
         
-        // Simulate progress updates
-        let progress = 0;
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
         const processedCount = document.getElementById('processedCount');
         
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 90) progress = 90;
-            
-            const roundedProgress = Math.round(progress);
-            const estimatedProcessed = Math.floor((roundedProgress / 100) * filesToProcess.length);
-            
-            progressBar.style.width = progress + '%';
-            progressBar.textContent = roundedProgress + '%';
-            progressText.textContent = `Analyzing images with AI models...`;
-            processedCount.textContent = estimatedProcessed;
-        }, 200);
+        // Use XMLHttpRequest for real upload progress tracking
+        const xhr = new XMLHttpRequest();
         
-        // Submit form
-        fetch('{% url "detector:batch_upload" %}', {
-            method: 'POST',
-            body: formData
-        })
-        .then(async response => {
-            const contentType = response.headers.get('content-type') || '';
-            if (contentType.includes('application/json')) {
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || `Server error: ${response.status}`);
-                }
-                return data;
+        // Phase 1: Upload progress (0% - 50%)
+        // This tracks actual bytes sent to the server
+        let uploadComplete = false;
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const uploadPercent = Math.round((e.loaded / e.total) * 50);
+                const uploaded = Math.floor((e.loaded / e.total) * totalFiles);
+                
+                progressBar.style.width = uploadPercent + '%';
+                progressBar.textContent = uploadPercent + '%';
+                progressText.textContent = 'Uploading images...';
+                processedCount.textContent = uploaded;
             }
-            throw new Error('Server returned a non-JSON response');
-        })
-        .then(data => {
-            clearInterval(progressInterval);
-            progressBar.style.width = '100%';
-            progressBar.textContent = '100%';
-            progressBar.style.background = 'linear-gradient(90deg, #34A853, #2d8f47)';
-            progressText.innerHTML = '<i class="fas fa-check-circle me-2"></i>All images processed successfully!';
-            progressText.style.color = '#34A853';
-            processedCount.textContent = filesToProcess.length;
+        });
+        
+        xhr.upload.addEventListener('load', function() {
+            uploadComplete = true;
+            progressBar.style.width = '50%';
+            progressBar.textContent = '50%';
+            progressText.textContent = 'Analyzing images with AI models...';
+            processedCount.textContent = totalFiles;
+        });
+        
+        // Phase 2: Server processing (50% - 95%)
+        // Estimate based on ~3 seconds per image
+        let processingInterval = null;
+        xhr.upload.addEventListener('load', function() {
+            let processingProgress = 50;
+            const estimatedTimePerImage = 3000; // 3 seconds per image
+            const totalEstimatedTime = totalFiles * estimatedTimePerImage;
+            const incrementInterval = 500; // update every 0.5s
+            const incrementAmount = (45 * incrementInterval) / totalEstimatedTime;
             
-            setTimeout(() => {
-                displayResults(data);
-            }, 500);
-        })
-        .catch(error => {
-            clearInterval(progressInterval);
-            progressText.textContent = 'Error: ' + error.message;
+            processingInterval = setInterval(() => {
+                processingProgress += incrementAmount;
+                if (processingProgress > 95) processingProgress = 95;
+                
+                const roundedProgress = Math.round(processingProgress);
+                const estimatedDone = Math.min(
+                    Math.floor(((processingProgress - 50) / 45) * totalFiles),
+                    totalFiles
+                );
+                
+                progressBar.style.width = roundedProgress + '%';
+                progressBar.textContent = roundedProgress + '%';
+                progressText.textContent = `Analyzing images with AI models... (${estimatedDone}/${totalFiles})`;
+            }, incrementInterval);
+        });
+        
+        // Phase 3: Complete
+        xhr.addEventListener('load', function() {
+            if (processingInterval) clearInterval(processingInterval);
+            
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = '100%';
+                    progressBar.style.background = 'linear-gradient(90deg, #34A853, #2d8f47)';
+                    progressText.innerHTML = '<i class="fas fa-check-circle me-2"></i>All images processed successfully!';
+                    progressText.style.color = '#34A853';
+                    processedCount.textContent = totalFiles;
+                    
+                    setTimeout(() => {
+                        displayResults(data);
+                    }, 500);
+                } catch (parseError) {
+                    progressText.textContent = 'Error: Invalid response from server';
+                    progressText.style.color = '#EA4335';
+                    progressBar.style.background = 'linear-gradient(90deg, #EA4335, #d33b2e)';
+                }
+            } else {
+                let errorMsg = 'Server error';
+                try {
+                    const errData = JSON.parse(xhr.responseText);
+                    errorMsg = errData.error || `Server error: ${xhr.status}`;
+                } catch (e) {
+                    errorMsg = `Server error: ${xhr.status}`;
+                }
+                progressText.textContent = 'Error: ' + errorMsg;
+                progressText.style.color = '#EA4335';
+                progressBar.style.background = 'linear-gradient(90deg, #EA4335, #d33b2e)';
+            }
+        });
+        
+        // Handle network errors
+        xhr.addEventListener('error', function() {
+            if (processingInterval) clearInterval(processingInterval);
+            progressText.textContent = 'Error: Network error - check your connection';
             progressText.style.color = '#EA4335';
             progressBar.style.background = 'linear-gradient(90deg, #EA4335, #d33b2e)';
         });
+        
+        // Handle timeout
+        xhr.addEventListener('timeout', function() {
+            if (processingInterval) clearInterval(processingInterval);
+            progressText.textContent = 'Error: Request timed out - images may still be processing';
+            progressText.style.color = '#EA4335';
+            progressBar.style.background = 'linear-gradient(90deg, #EA4335, #d33b2e)';
+        });
+        
+        // Send the request
+        xhr.open('POST', '{% url "detector:batch_upload" %}');
+        xhr.timeout = 300000; // 5 minute timeout
+        xhr.send(formData);
     });
     
     function displayResults(data) {
