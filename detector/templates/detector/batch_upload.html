@@ -64,44 +64,46 @@
                         
                         <!-- Progress Section -->
                         <div id="progressSection" style="display: none;" class="mt-4">
-                            <div class="card shadow">
-                                <div class="card-body py-4">
-                                    <!-- Step indicators -->
-                                    <div class="d-flex justify-content-center mb-4">
-                                        <div class="d-flex align-items-center">
-                                            <div id="step1" class="d-flex align-items-center">
-                                                <span class="badge rounded-pill bg-primary" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">1</span>
-                                                <span class="ms-2 fw-bold text-primary" style="font-size: 14px;">Upload</span>
-                                            </div>
-                                            <div style="width: 40px; height: 2px; background: #dee2e6; margin: 0 10px;"></div>
-                                            <div id="step2" class="d-flex align-items-center">
-                                                <span class="badge rounded-pill bg-secondary" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">2</span>
-                                                <span class="ms-2 text-muted" style="font-size: 14px;">Analyze</span>
-                                            </div>
-                                            <div style="width: 40px; height: 2px; background: #dee2e6; margin: 0 10px;"></div>
-                                            <div id="step3" class="d-flex align-items-center">
-                                                <span class="badge rounded-pill bg-secondary" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">3</span>
-                                                <span class="ms-2 text-muted" style="font-size: 14px;">Done</span>
-                                            </div>
+                            <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
+                                <div class="card-body" style="padding: 28px 24px;">
+                                    
+                                    <!-- Steps row -->
+                                    <table id="stepsTable" style="width: 100%; max-width: 340px; margin: 0 auto 20px auto; border-collapse: collapse;">
+                                        <tr>
+                                            <td id="step1dot" style="text-align: center;"><span style="display: inline-block; width: 30px; height: 30px; border-radius: 50%; background: #4285F4; color: #fff; font-weight: 700; font-size: 14px; line-height: 30px; text-align: center;">1</span></td>
+                                            <td style="text-align: center;"><div style="height: 3px; background: #dee2e6; margin: 0 4px;"></div></td>
+                                            <td id="step2dot" style="text-align: center;"><span style="display: inline-block; width: 30px; height: 30px; border-radius: 50%; background: #ccc; color: #fff; font-weight: 700; font-size: 14px; line-height: 30px; text-align: center;">2</span></td>
+                                            <td style="text-align: center;"><div style="height: 3px; background: #dee2e6; margin: 0 4px;"></div></td>
+                                            <td id="step3dot" style="text-align: center;"><span style="display: inline-block; width: 30px; height: 30px; border-radius: 50%; background: #ccc; color: #fff; font-weight: 700; font-size: 14px; line-height: 30px; text-align: center;">3</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td id="step1label" style="text-align: center; font-size: 12px; font-weight: 600; color: #4285F4; padding-top: 4px;">Upload</td>
+                                            <td></td>
+                                            <td id="step2label" style="text-align: center; font-size: 12px; color: #999; padding-top: 4px;">Analyze</td>
+                                            <td></td>
+                                            <td id="step3label" style="text-align: center; font-size: 12px; color: #999; padding-top: 4px;">Done</td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Progress bar container -->
+                                    <div style="background: #e9ecef; border-radius: 12px; height: 44px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.08); margin-bottom: 16px;">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar"
+                                             style="width: 0%; height: 100%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 16px; font-weight: 700; line-height: 44px; text-align: center; color: #fff; transition: width 0.4s ease; min-width: 44px;">
+                                            0%
                                         </div>
                                     </div>
                                     
-                                    <!-- Progress bar -->
-                                    <div class="progress mb-3" style="height: 40px; border-radius: 20px; background: #eee; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #4285F4, #34A853); font-size: 16px; font-weight: 700; line-height: 40px; text-align: center; transition: width 0.4s ease; color: #fff; min-width: 40px;">0%</div>
-                                    </div>
-                                    
-                                    <div id="progressText" class="text-center" style="font-size: 16px; font-weight: 600; color: #4285F4;">
+                                    <!-- Status text -->
+                                    <p id="progressText" style="text-align: center; font-size: 16px; font-weight: 600; color: #4285F4; margin: 0 0 4px 0;">
                                         Preparing...
-                                    </div>
-                                    <div id="progressDetails" class="text-center mt-1" style="font-size: 14px; color: #888;">
+                                    </p>
+                                    <p id="progressDetails" style="text-align: center; font-size: 14px; color: #888; margin: 0 0 4px 0;">
                                         <span id="processedCount">0</span> / <span id="totalCount">0</span> images
-                                    </div>
-                                    
-                                    <!-- Elapsed timer -->
-                                    <div id="elapsedTime" class="text-center mt-2" style="font-size: 13px; color: #aaa;">
+                                    </p>
+                                    <p id="elapsedTime" style="text-align: center; font-size: 13px; color: #bbb; margin: 0;">
                                         Elapsed: 0s
-                                    </div>
+                                    </p>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -338,19 +340,21 @@
         // Step indicator helpers
         function setStep(stepNum) {
             for (let i = 1; i <= 3; i++) {
-                const step = document.getElementById('step' + i);
-                const badge = step.querySelector('.badge');
-                const label = step.querySelector('span:last-child');
+                const dot = document.querySelector('#step' + i + 'dot span');
+                const label = document.getElementById('step' + i + 'label');
                 if (i < stepNum) {
-                    badge.className = 'badge rounded-pill bg-success';
-                    badge.innerHTML = '<i class="fas fa-check" style="font-size:12px"></i>';
-                    label.className = 'ms-2 fw-bold text-success';
+                    dot.style.background = '#34A853';
+                    dot.innerHTML = '✓';
+                    label.style.color = '#34A853';
+                    label.style.fontWeight = '600';
                 } else if (i === stepNum) {
-                    badge.className = 'badge rounded-pill bg-primary';
-                    label.className = 'ms-2 fw-bold text-primary';
+                    dot.style.background = '#4285F4';
+                    label.style.color = '#4285F4';
+                    label.style.fontWeight = '600';
                 } else {
-                    badge.className = 'badge rounded-pill bg-secondary';
-                    label.className = 'ms-2 text-muted';
+                    dot.style.background = '#ccc';
+                    label.style.color = '#999';
+                    label.style.fontWeight = 'normal';
                 }
             }
         }
