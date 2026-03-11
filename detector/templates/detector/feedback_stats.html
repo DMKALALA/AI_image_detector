@@ -1,466 +1,425 @@
-{% extends 'detector/base.html' %}
-
-{% block title %}Feedback Statistics - AI Image Detector{% endblock %}
-
-{% block content %}
+{% extends 'detector/base.html' %} {% block title %}Feedback Statistics - AI
+Image Detector{% endblock %} {% block content %}
 <section class="py-5">
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{% url 'detector:home' %}">Home</a></li>
-                        <li class="breadcrumb-item active">Feedback Statistics</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-        
-        <!-- Theme Selector -->
-        <div class="row mb-3">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body py-2">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div class="mb-2 mb-md-0">
-                                <small><i class="fas fa-palette"></i> Chart Theme:</small>
-                            </div>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <button type="button" class="btn btn-outline-primary theme-btn active" data-theme="default">Default</button>
-                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="vintage">Vintage</button>
-                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="dark">Dark</button>
-                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="macarons">Macarons</button>
-                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="infographic">Infographic</button>
-                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="shine">Shine</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h3 class="mb-0"><i class="fas fa-chart-bar"></i> User Feedback Statistics</h3>
-                    </div>
-                    <div class="card-body">
-                        <!-- Overview Cards -->
-                        <div class="row mb-4">
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h4 class="text-primary">{{ total_images }}</h4>
-                                        <p class="mb-0">Total Images</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h4 class="text-info">{{ feedback_images }}</h4>
-                                        <p class="mb-0">With Feedback</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h4 class="text-success">{{ feedback_rate|floatformat:1 }}%</h4>
-                                        <p class="mb-0">Feedback Rate</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h4 class="text-warning">{{ accuracy|floatformat:1 }}%</h4>
-                                        <p class="mb-0">Detection Accuracy</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Feedback Breakdown -->
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="card border-success">
-                                    <div class="card-header bg-success text-white">
-                                        <h5 class="mb-0"><i class="fas fa-check"></i> Correct Detections</h5>
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <h2 class="text-success">{{ correct_count }}</h2>
-                                        <p class="mb-0">Users confirmed correct</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-danger">
-                                    <div class="card-header bg-danger text-white">
-                                        <h5 class="mb-0"><i class="fas fa-times"></i> Incorrect Detections</h5>
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <h2 class="text-danger">{{ incorrect_count }}</h2>
-                                        <p class="mb-0">Users reported incorrect</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-warning">
-                                    <div class="card-header bg-warning text-white">
-                                        <h5 class="mb-0"><i class="fas fa-question"></i> Unsure</h5>
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <h2 class="text-warning">{{ unsure_count }}</h2>
-                                        <p class="mb-0">Users were unsure</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Feedback Distribution Chart -->
-                        {% if total_feedback > 0 %}
-                        <div class="mt-4">
-                            <h5>Feedback Distribution</h5>
-                            <div id="feedbackDistributionChart" style="width: 100%; height: 350px;"></div>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Actions -->
-                        <div class="mt-4 text-center">
-                            <a href="{% url 'detector:home' %}" class="btn btn-primary">
-                                <i class="fas fa-upload"></i> Upload More Images
-                            </a>
-                            <button class="btn btn-secondary" onclick="location.reload()">
-                                <i class="fas fa-sync"></i> Refresh Statistics
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+              <a href="{% url 'detector:home' %}">Home</a>
+            </li>
+            <li class="breadcrumb-item active">Feedback Statistics</li>
+          </ol>
+        </nav>
+      </div>
     </div>
+
+    <!-- Theme Selector -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body py-2">
+            <div
+              class="d-flex align-items-center justify-content-between flex-wrap"
+            >
+              <div class="mb-2 mb-md-0">
+                <small><i class="fas fa-palette"></i> Chart Theme:</small>
+              </div>
+              <div class="btn-group btn-group-sm" role="group">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary theme-btn active"
+                  data-theme="default"
+                >
+                  Default
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary theme-btn"
+                  data-theme="vintage"
+                >
+                  Vintage
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary theme-btn"
+                  data-theme="dark"
+                >
+                  Dark
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary theme-btn"
+                  data-theme="macarons"
+                >
+                  Macarons
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary theme-btn"
+                  data-theme="infographic"
+                >
+                  Infographic
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary theme-btn"
+                  data-theme="shine"
+                >
+                  Shine
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header bg-primary text-white" id="mainCardHeader" data-default-bg="bg-primary">
+            <h3 class="mb-0">
+              <i class="fas fa-chart-bar"></i> User Feedback Statistics
+            </h3>
+          </div>
+          <div class="card-body">
+            <!-- Overview Cards -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="card bg-light theme-card" data-default-bg="bg-light" data-default-text="text-primary" data-theme-idx="0">
+                  <div class="card-body text-center">
+                    <h4 class="text-primary theme-card-value">{{ total_images }}</h4>
+                    <p class="mb-0">Total Images</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light theme-card" data-default-bg="bg-light" data-default-text="text-info" data-theme-idx="1">
+                  <div class="card-body text-center">
+                    <h4 class="text-info theme-card-value">{{ feedback_images }}</h4>
+                    <p class="mb-0">With Feedback</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light theme-card" data-default-bg="bg-light" data-default-text="text-success" data-theme-idx="2">
+                  <div class="card-body text-center">
+                    <h4 class="text-success theme-card-value">
+                      {{ feedback_rate|floatformat:1 }}%
+                    </h4>
+                    <p class="mb-0">Feedback Rate</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light theme-card" data-default-bg="bg-light" data-default-text="text-warning" data-theme-idx="3">
+                  <div class="card-body text-center">
+                    <h4 class="text-warning theme-card-value">{{ accuracy|floatformat:1 }}%</h4>
+                    <p class="mb-0">Detection Accuracy</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feedback Breakdown -->
+            <div class="row">
+              <div class="col-md-4">
+                <div class="card border-success theme-breakdown" data-default-border="border-success" data-default-header="bg-success" data-default-text="text-success" data-theme-idx="0">
+                  <div class="card-header bg-success text-white theme-header">
+                    <h5 class="mb-0">
+                      <i class="fas fa-check"></i> Correct Detections
+                    </h5>
+                  </div>
+                  <div class="card-body text-center">
+                    <h2 class="text-success theme-breakdown-value">{{ correct_count }}</h2>
+                    <p class="mb-0">Users confirmed correct</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card border-danger theme-breakdown" data-default-border="border-danger" data-default-header="bg-danger" data-default-text="text-danger" data-theme-idx="1">
+                  <div class="card-header bg-danger text-white theme-header">
+                    <h5 class="mb-0">
+                      <i class="fas fa-times"></i> Incorrect Detections
+                    </h5>
+                  </div>
+                  <div class="card-body text-center">
+                    <h2 class="text-danger theme-breakdown-value">{{ incorrect_count }}</h2>
+                    <p class="mb-0">Users reported incorrect</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card border-warning theme-breakdown" data-default-border="border-warning" data-default-header="bg-warning" data-default-text="text-warning" data-theme-idx="2">
+                  <div class="card-header bg-warning text-white theme-header">
+                    <h5 class="mb-0"><i class="fas fa-question"></i> Unsure</h5>
+                  </div>
+                  <div class="card-body text-center">
+                    <h2 class="text-warning theme-breakdown-value">{{ unsure_count }}</h2>
+                    <p class="mb-0">Users were unsure</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feedback Distribution Chart -->
+            <div class="mt-4">
+              <h5>Feedback Distribution</h5>
+              {% if total_feedback > 0 %}
+              <div
+                id="feedbackDistributionChart"
+                style="width: 100%; height: 400px"
+              ></div>
+              {% else %}
+              <div
+                id="feedbackDistributionChart"
+                style="
+                  width: 100%;
+                  height: 400px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <div class="text-center text-muted">
+                  <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                  <p>
+                    No feedback data yet. Upload and analyze images, then
+                    provide feedback to see the chart.
+                  </p>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4 text-center">
+              <a href="{% url 'detector:home' %}" class="btn btn-primary">
+                <i class="fas fa-upload"></i> Upload More Images
+              </a>
+              <button class="btn btn-secondary" onclick="location.reload()">
+                <i class="fas fa-sync"></i> Refresh Statistics
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
-{% endblock %}
-
-{% block extra_css %}
+{% endblock %} {% block extra_css %}
 <style>
-    .progress-bar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-    }
+  .progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+  }
 </style>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+{% endblock %} {% block extra_js %}
 <script>
-    // Get theme from localStorage or use default
-    let savedTheme = localStorage.getItem('echarts-theme');
-    let currentTheme = (savedTheme && savedTheme !== 'default') ? savedTheme : null;
-    
-    // Load themes dynamically
-    function loadThemes() {
-        const themes = ['vintage', 'dark', 'macarons', 'infographic', 'shine'];
-        themes.forEach(theme => {
-            const script = document.createElement('script');
-            script.src = `https://fastly.jsdelivr.net/npm/echarts@5.4.3/theme/${theme}.js`;
-            script.onerror = function() {
-                console.warn(`Theme ${theme} failed to load`);
-            };
-            document.head.appendChild(script);
-        });
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const chartDom = document.getElementById('feedbackDistributionChart');
-        if (chartDom) {
-            const myChart = echarts.init(chartDom, currentTheme);
-            
-            const correctCount = {{ correct_count }};
-            const incorrectCount = {{ incorrect_count }};
-            const unsureCount = {{ unsure_count }};
-            const totalFeedback = {{ total_feedback }};
-            
-            const option = {
-                title: {
-                    text: 'Feedback Breakdown',
-                    left: 'center',
-                    top: 10,
-                    textStyle: {
-                        fontSize: 18,
-                        fontWeight: 600
-                    }
-                },
-                tooltip: {
-                    trigger: 'item',
-                    formatter: function(params) {
-                        const percent = ((params.value / totalFeedback) * 100).toFixed(1);
-                        return params.name + '<br/>' + params.value + ' (' + percent + '%)';
-                    }
-                },
-                legend: {
-                    orient: 'horizontal',
-                    bottom: 10,
-                    left: 'center'
-                },
-                series: [
-                    {
-                        name: 'Feedback',
-                        type: 'pie',
-                        radius: ['40%', '70%'],
-                        center: ['50%', '50%'],
-                        avoidLabelOverlap: false,
-                        itemStyle: {
-                            borderRadius: 10,
-                            borderColor: '#fff',
-                            borderWidth: 3
-                        },
-                        label: {
-                            show: true,
-                            formatter: function(params) {
-                                const percent = ((params.value / totalFeedback) * 100).toFixed(1);
-                                return params.value + '\n(' + percent + '%)';
-                            },
-                            fontSize: 14,
-                            fontWeight: 'bold'
-                        },
-                        emphasis: {
-                            label: {
-                                show: true,
-                                fontSize: 18,
-                                fontWeight: 'bold'
-                            },
-                            itemStyle: {
-                                shadowBlur: 10,
-                                shadowOffsetX: 0,
-                                shadowColor: 'rgba(0, 0, 0, 0.5)'
-                            }
-                        },
-                        labelLine: {
-                            show: true,
-                            length: 15,
-                            length2: 10
-                        },
-                        data: [
-                            {
-                                value: correctCount,
-                                name: 'Correct',
-                                itemStyle: {
-                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                        { offset: 0, color: '#34A853' },
-                                        { offset: 1, color: '#2d8f47' }
-                                    ])
-                                }
-                            },
-                            {
-                                value: incorrectCount,
-                                name: 'Incorrect',
-                                itemStyle: {
-                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                        { offset: 0, color: '#EA4335' },
-                                        { offset: 1, color: '#d33b2e' }
-                                    ])
-                                }
-                            },
-                            {
-                                value: unsureCount,
-                                name: 'Unsure',
-                                itemStyle: {
-                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                        { offset: 0, color: '#FBBC04' },
-                                        { offset: 1, color: '#e0a800' }
-                                    ])
-                                }
-                            }
-                        ],
-                        animationType: 'scale',
-                        animationEasing: 'elasticOut',
-                        animationDelay: function (idx) {
-                            return Math.random() * 200;
-                        }
-                    }
-                ]
-            };
-            
-            myChart.setOption(option);
-            
-            // Store chart instance
-            window.feedbackChart = myChart;
-            
-            // Make responsive
-            window.addEventListener('resize', function() {
-                myChart.resize();
-            });
-            
-            // Initialize theme switcher
-            initThemeSwitcher();
-            
-            // Load themes
-            loadThemes();
-        }
-    });
-    
-    // Theme Switcher
-    function initThemeSwitcher() {
-        // Set active theme button on load
-        const savedTheme = localStorage.getItem('echarts-theme') || 'default';
-        const themeButtons = document.querySelectorAll('.theme-btn');
-        themeButtons.forEach(btn => {
-            if (btn.getAttribute('data-theme') === savedTheme) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-        
-        // Add click handlers
-        themeButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // Update active state
-                themeButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Get selected theme
-                const selectedTheme = this.getAttribute('data-theme');
-                currentTheme = selectedTheme === 'default' ? null : selectedTheme;
-                
-                // Save to localStorage
-                localStorage.setItem('echarts-theme', selectedTheme);
-                
-                // Show loading state
-                const chartDom = document.getElementById('feedbackDistributionChart');
-                if (chartDom) {
-                    chartDom.style.transition = 'opacity 0.3s ease';
-                    chartDom.style.opacity = '0.5';
-                }
-                
-                // Dispose old chart and redraw with new theme
-                setTimeout(() => {
-                    if (window.feedbackChart) {
-                        window.feedbackChart.dispose();
-                    }
-                    
-                    // Reinitialize chart
-                    const newChart = echarts.init(chartDom, currentTheme);
-                    const correctCount = {{ correct_count }};
-                    const incorrectCount = {{ incorrect_count }};
-                    const unsureCount = {{ unsure_count }};
-                    const totalFeedback = {{ total_feedback }};
-                    
-                    const option = {
-                        title: {
-                            text: 'Feedback Breakdown',
-                            left: 'center',
-                            top: 10,
-                            textStyle: {
-                                fontSize: 18,
-                                fontWeight: 600
-                            }
-                        },
-                        tooltip: {
-                            trigger: 'item',
-                            formatter: function(params) {
-                                const percent = ((params.value / totalFeedback) * 100).toFixed(1);
-                                return params.name + '<br/>' + params.value + ' (' + percent + '%)';
-                            }
-                        },
-                        legend: {
-                            orient: 'horizontal',
-                            bottom: 10,
-                            left: 'center'
-                        },
-                        series: [
-                            {
-                                name: 'Feedback',
-                                type: 'pie',
-                                radius: ['40%', '70%'],
-                                center: ['50%', '50%'],
-                                avoidLabelOverlap: false,
-                                itemStyle: {
-                                    borderRadius: 10,
-                                    borderColor: '#fff',
-                                    borderWidth: 3
-                                },
-                                label: {
-                                    show: true,
-                                    formatter: function(params) {
-                                        const percent = ((params.value / totalFeedback) * 100).toFixed(1);
-                                        return params.value + '\n(' + percent + '%)';
-                                    },
-                                    fontSize: 14,
-                                    fontWeight: 'bold'
-                                },
-                                emphasis: {
-                                    label: {
-                                        show: true,
-                                        fontSize: 18,
-                                        fontWeight: 'bold'
-                                    },
-                                    itemStyle: {
-                                        shadowBlur: 10,
-                                        shadowOffsetX: 0,
-                                        shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                    }
-                                },
-                                labelLine: {
-                                    show: true,
-                                    length: 15,
-                                    length2: 10
-                                },
-                                data: [
-                                    {
-                                        value: correctCount,
-                                        name: 'Correct',
-                                        itemStyle: {
-                                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                                { offset: 0, color: '#34A853' },
-                                                { offset: 1, color: '#2d8f47' }
-                                            ])
-                                        }
-                                    },
-                                    {
-                                        value: incorrectCount,
-                                        name: 'Incorrect',
-                                        itemStyle: {
-                                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                                { offset: 0, color: '#EA4335' },
-                                                { offset: 1, color: '#d33b2e' }
-                                            ])
-                                        }
-                                    },
-                                    {
-                                        value: unsureCount,
-                                        name: 'Unsure',
-                                        itemStyle: {
-                                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                                { offset: 0, color: '#FBBC04' },
-                                                { offset: 1, color: '#e0a800' }
-                                            ])
-                                        }
-                                    }
-                                ],
-                                animationType: 'scale',
-                                animationEasing: 'elasticOut',
-                                animationDelay: function (idx) {
-                                    return Math.random() * 200;
-                                }
-                            }
-                        ]
-                    };
-                    
-                    newChart.setOption(option);
-                    window.feedbackChart = newChart;
-                    
-                    // Restore opacity
-                    chartDom.style.opacity = '1';
-                }, 150);
-            });
-        });
-    }
+  var totalFeedback = {{ total_feedback }};
+  var feedbackChartInstance = null;
+
+  // Theme color palettes (same as analytics dashboard - first 4 colors from each ECharts theme)
+  var themeCardColors = {
+      vintage:     ['#d87c7c', '#919e8b', '#d7ab82', '#6e7074'],
+      dark:        ['#dd6b66', '#759aa0', '#e69d87', '#8dc1a9'],
+      macarons:    ['#2ec7c9', '#b6a2de', '#5ab1ef', '#ffb980'],
+      infographic: ['#C1232B', '#27727B', '#FCCE10', '#E87C25'],
+      shine:       ['#c12e34', '#e6b600', '#0098d9', '#2b821d']
+  };
+
+  function getLuminance(hex) {
+      hex = hex.replace('#', '');
+      var r = parseInt(hex.substring(0, 2), 16) / 255;
+      var g = parseInt(hex.substring(2, 4), 16) / 255;
+      var b = parseInt(hex.substring(4, 6), 16) / 255;
+      r = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+      g = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+      b = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  function applyFeedbackTheme() {
+      var themeName = window.echartsTheme;
+      var palette = themeCardColors[themeName];
+
+      // Overview cards: apply theme background colors
+      document.querySelectorAll('.theme-card').forEach(function(card) {
+          var defaultBg = card.getAttribute('data-default-bg');
+          var defaultText = card.getAttribute('data-default-text');
+          var idx = parseInt(card.getAttribute('data-theme-idx'), 10);
+          var valueEl = card.querySelector('.theme-card-value');
+          if (!themeName || !palette) {
+              card.style.backgroundColor = '';
+              card.style.borderColor = '';
+              card.classList.remove('text-white', 'text-dark');
+              if (!card.classList.contains(defaultBg)) card.classList.add(defaultBg);
+              if (valueEl) { valueEl.style.color = ''; if (!valueEl.classList.contains(defaultText)) valueEl.classList.add(defaultText); }
+          } else {
+              card.classList.remove(defaultBg);
+              var color = palette[idx % palette.length];
+              card.style.backgroundColor = color;
+              card.style.borderColor = color;
+              var lum = getLuminance(color);
+              if (lum > 0.35) { card.classList.remove('text-white'); card.classList.add('text-dark'); }
+              else { card.classList.remove('text-dark'); card.classList.add('text-white'); }
+              if (valueEl) { valueEl.classList.remove(defaultText); valueEl.style.color = 'inherit'; }
+          }
+      });
+
+      // Breakdown cards: apply theme colors to headers, borders, and value text
+      document.querySelectorAll('.theme-breakdown').forEach(function(card) {
+          var defaultBorder = card.getAttribute('data-default-border');
+          var defaultHeader = card.getAttribute('data-default-header');
+          var defaultText = card.getAttribute('data-default-text');
+          var idx = parseInt(card.getAttribute('data-theme-idx'), 10);
+          var header = card.querySelector('.theme-header');
+          var valueEl = card.querySelector('.theme-breakdown-value');
+          if (!themeName || !palette) {
+              card.style.borderColor = '';
+              if (!card.classList.contains(defaultBorder)) card.classList.add(defaultBorder);
+              if (header) { header.style.backgroundColor = ''; if (!header.classList.contains(defaultHeader)) header.classList.add(defaultHeader); header.classList.remove('text-dark'); if (!header.classList.contains('text-white')) header.classList.add('text-white'); }
+              if (valueEl) { valueEl.style.color = ''; if (!valueEl.classList.contains(defaultText)) valueEl.classList.add(defaultText); }
+          } else {
+              var color = palette[idx % palette.length];
+              card.classList.remove(defaultBorder);
+              card.style.borderColor = color;
+              if (header) {
+                  header.classList.remove(defaultHeader);
+                  header.style.backgroundColor = color;
+                  var lum = getLuminance(color);
+                  if (lum > 0.35) { header.classList.remove('text-white'); header.classList.add('text-dark'); }
+                  else { header.classList.remove('text-dark'); header.classList.add('text-white'); }
+              }
+              if (valueEl) { valueEl.classList.remove(defaultText); valueEl.style.color = color; }
+          }
+      });
+
+      // Main card header
+      var mainHeader = document.getElementById('mainCardHeader');
+      if (mainHeader) {
+          var defaultBg = mainHeader.getAttribute('data-default-bg');
+          if (!themeName || !palette) {
+              mainHeader.style.backgroundColor = '';
+              if (!mainHeader.classList.contains(defaultBg)) mainHeader.classList.add(defaultBg);
+              mainHeader.classList.remove('text-dark');
+              if (!mainHeader.classList.contains('text-white')) mainHeader.classList.add('text-white');
+          } else {
+              mainHeader.classList.remove(defaultBg);
+              var color = palette[0];
+              mainHeader.style.backgroundColor = color;
+              var lum = getLuminance(color);
+              if (lum > 0.35) { mainHeader.classList.remove('text-white'); mainHeader.classList.add('text-dark'); }
+              else { mainHeader.classList.remove('text-dark'); mainHeader.classList.add('text-white'); }
+          }
+      }
+  }
+
+  function drawFeedbackDistributionChart() {
+      applyFeedbackTheme();
+      var chartDom = document.getElementById('feedbackDistributionChart');
+      if (!chartDom || totalFeedback <= 0) return;
+
+      // Dispose existing chart first
+      if (feedbackChartInstance) {
+          feedbackChartInstance.dispose();
+          feedbackChartInstance = null;
+      }
+
+      // Clear placeholder content (only needed on first draw)
+      chartDom.style.display = '';
+      chartDom.style.alignItems = '';
+      chartDom.style.justifyContent = '';
+      // Remove any placeholder HTML (text nodes), but not if echarts already owns it
+      if (!chartDom.querySelector('canvas')) {
+          chartDom.innerHTML = '';
+      }
+
+      var myChart = echarts.init(chartDom, window.echartsTheme);
+
+      var correctCount = {{ correct_count }};
+      var incorrectCount = {{ incorrect_count }};
+      var unsureCount = {{ unsure_count }};
+
+      // Default colors (used only when no theme is active)
+      var defaultColors = ['#34A853', '#EA4335', '#FBBC04'];
+      var useDefaultColors = !window.echartsTheme;
+
+      var seriesData = [
+          { value: correctCount, name: 'Correct' },
+          { value: incorrectCount, name: 'Incorrect' },
+          { value: unsureCount, name: 'Unsure' }
+      ];
+      if (useDefaultColors) {
+          seriesData[0].itemStyle = { color: defaultColors[0] };
+          seriesData[1].itemStyle = { color: defaultColors[1] };
+          seriesData[2].itemStyle = { color: defaultColors[2] };
+      }
+
+      myChart.setOption({
+          title: {
+              text: 'Feedback Breakdown',
+              left: 'center',
+              top: 5,
+              textStyle: { fontSize: 18, fontWeight: 600 }
+          },
+          tooltip: {
+              trigger: 'item',
+              formatter: function(params) {
+                  var pct = ((params.value / totalFeedback) * 100).toFixed(1);
+                  return params.name + '<br/>' + params.value + ' (' + pct + '%)';
+              }
+          },
+          legend: {
+              orient: 'horizontal',
+              bottom: 0,
+              left: 'center'
+          },
+          series: [{
+              name: 'Feedback',
+              type: 'pie',
+              radius: ['35%', '60%'],
+              center: ['50%', '52%'],
+              avoidLabelOverlap: true,
+              itemStyle: { borderRadius: 10, borderColor: window.echartsTheme === 'dark' ? '#333' : '#fff', borderWidth: 3 },
+              label: {
+                  show: true,
+                  formatter: function(params) {
+                      var pct = ((params.value / totalFeedback) * 100).toFixed(1);
+                      return params.value + ' (' + pct + '%)';
+                  },
+                  fontSize: 13,
+                  fontWeight: 'bold',
+                  distanceToLabelLine: 5
+              },
+              emphasis: {
+                  label: { show: true, fontSize: 16, fontWeight: 'bold' },
+                  itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' }
+              },
+              labelLine: { show: true, length: 20, length2: 15 },
+              data: seriesData,
+              animationType: 'scale',
+              animationEasing: 'elasticOut'
+          }]
+      });
+
+      feedbackChartInstance = myChart;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+      window.waitForTheme(window.echartsTheme, function() {
+          drawFeedbackDistributionChart();
+      });
+      window.initGlobalThemeSwitcher(drawFeedbackDistributionChart);
+  });
+
+  window.addEventListener('resize', function() {
+      if (feedbackChartInstance) feedbackChartInstance.resize();
+  });
 </script>
 {% endblock %}

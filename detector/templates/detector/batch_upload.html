@@ -67,38 +67,13 @@
                             <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
                                 <div class="card-body" style="padding: 28px 24px;">
                                     
-                                    <!-- Steps row -->
-                                    <table id="stepsTable" style="width: 100%; max-width: 340px; margin: 0 auto 20px auto; border-collapse: collapse;">
-                                        <tr>
-                                            <td id="step1dot" style="text-align: center;"><span style="display: inline-block; width: 30px; height: 30px; border-radius: 50%; background: #4285F4; color: #fff; font-weight: 700; font-size: 14px; line-height: 30px; text-align: center;">1</span></td>
-                                            <td style="text-align: center;"><div style="height: 3px; background: #dee2e6; margin: 0 4px;"></div></td>
-                                            <td id="step2dot" style="text-align: center;"><span style="display: inline-block; width: 30px; height: 30px; border-radius: 50%; background: #ccc; color: #fff; font-weight: 700; font-size: 14px; line-height: 30px; text-align: center;">2</span></td>
-                                            <td style="text-align: center;"><div style="height: 3px; background: #dee2e6; margin: 0 4px;"></div></td>
-                                            <td id="step3dot" style="text-align: center;"><span style="display: inline-block; width: 30px; height: 30px; border-radius: 50%; background: #ccc; color: #fff; font-weight: 700; font-size: 14px; line-height: 30px; text-align: center;">3</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td id="step1label" style="text-align: center; font-size: 12px; font-weight: 600; color: #4285F4; padding-top: 4px;">Upload</td>
-                                            <td></td>
-                                            <td id="step2label" style="text-align: center; font-size: 12px; color: #999; padding-top: 4px;">Analyze</td>
-                                            <td></td>
-                                            <td id="step3label" style="text-align: center; font-size: 12px; color: #999; padding-top: 4px;">Done</td>
-                                        </tr>
-                                    </table>
-                                    
-                                    <!-- Progress bar container -->
-                                    <div style="position: relative; background: #e9ecef; border-radius: 12px; height: 44px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.08); margin-bottom: 16px;">
-                                        <div id="progressBar"
-                                             style="position: absolute; top: 0; left: 0; width: 0%; height: 100%; background: linear-gradient(90deg, #4285F4, #34A853); border-radius: 12px; transition: width 0.4s ease; background-size: 40px 40px; background-image: linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent); animation: progress-stripes 1s linear infinite;">
-                                        </div>
-                                        <div id="progressBarText"
-                                             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; line-height: 44px; text-align: center; font-size: 16px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); z-index: 1;">
-                                            0%
-                                        </div>
+                                    <!-- Spinner -->
+                                    <div id="uploadSpinner" style="text-align: center; margin-bottom: 16px;">
+                                        <div style="display: inline-block; width: 48px; height: 48px; border: 4px solid #e9ecef; border-top-color: #4285F4; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
                                     </div>
                                     <style>
-                                        @keyframes progress-stripes {
-                                            from { background-position: 40px 0; }
-                                            to { background-position: 0 0; }
+                                        @keyframes spin {
+                                            to { transform: rotate(360deg); }
                                         }
                                     </style>
                                     
@@ -107,7 +82,7 @@
                                         Preparing...
                                     </p>
                                     <p id="progressDetails" style="text-align: center; font-size: 14px; color: #888; margin: 0 0 4px 0;">
-                                        <span id="processedCount">0</span> / <span id="totalCount">0</span> images
+                                        <span id="totalCount">0</span> images
                                     </p>
                                     <p id="elapsedTime" style="text-align: center; font-size: 13px; color: #bbb; margin: 0;">
                                         Elapsed: 0s
@@ -341,33 +316,10 @@
         const totalFiles = filesToProcess.length;
         document.getElementById('totalCount').textContent = totalFiles;
         
-        const progressBar = document.getElementById('progressBar');
-        const progressBarText = document.getElementById('progressBarText');
         const progressText = document.getElementById('progressText');
-        const processedCount = document.getElementById('processedCount');
         const elapsedTime = document.getElementById('elapsedTime');
         
         // Step indicator helpers
-        function setStep(stepNum) {
-            for (let i = 1; i <= 3; i++) {
-                const dot = document.querySelector('#step' + i + 'dot span');
-                const label = document.getElementById('step' + i + 'label');
-                if (i < stepNum) {
-                    dot.style.background = '#34A853';
-                    dot.innerHTML = '✓';
-                    label.style.color = '#34A853';
-                    label.style.fontWeight = '600';
-                } else if (i === stepNum) {
-                    dot.style.background = '#4285F4';
-                    label.style.color = '#4285F4';
-                    label.style.fontWeight = '600';
-                } else {
-                    dot.style.background = '#ccc';
-                    label.style.color = '#999';
-                    label.style.fontWeight = 'normal';
-                }
-            }
-        }
         
         // Elapsed time counter
         const startTime = Date.now();
@@ -377,29 +329,16 @@
         }, 1000);
         
         // --- STEP 1: Upload via XMLHttpRequest ---
-        setStep(1);
         const xhr = new XMLHttpRequest();
         
         xhr.upload.addEventListener('progress', function(e) {
             if (e.lengthComputable) {
-                const pct = Math.round((e.loaded / e.total) * 100);
-                progressBar.style.width = pct + '%';
-                progressBarText.textContent = pct + '%';
                 progressText.textContent = 'Uploading ' + totalFiles + ' image' + (totalFiles > 1 ? 's' : '') + '...';
-                processedCount.textContent = Math.floor((e.loaded / e.total) * totalFiles);
             }
         });
         
         xhr.upload.addEventListener('load', function() {
-            // Upload finished — move to step 2: server-side analysis
-            setStep(2);
-            progressBar.style.width = '100%';
-            progressBar.style.background = 'linear-gradient(90deg, #FBBC04, #FF9800)';
-            progressBar.style.backgroundSize = '40px 40px';
-            progressBar.style.backgroundImage = 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)';
-            progressBarText.textContent = 'Analyzing...';
             progressText.textContent = 'AI models analyzing ' + totalFiles + ' image' + (totalFiles > 1 ? 's' : '') + ' — please wait...';
-            processedCount.textContent = totalFiles;
         });
         
         // --- STEP 3: Server response ---
@@ -411,12 +350,7 @@
             if (xhr.status >= 200 && xhr.status < 300) {
                 try {
                     const data = JSON.parse(xhr.responseText);
-                    setStep(3);
-                    progressBar.style.width = '100%';
-                    progressBar.style.background = 'linear-gradient(90deg, #34A853, #2d8f47)';
-                    progressBar.style.backgroundImage = 'none';
-                    progressBar.style.animation = 'none';
-                    progressBarText.textContent = '✓ Done';
+                    uploadSpinner.innerHTML = '<div style="display:inline-block;width:48px;height:48px;border-radius:50%;background:#34A853;color:#fff;font-size:24px;line-height:48px;text-align:center;">\u2713</div>';
                     progressText.innerHTML = '<i class="fas fa-check-circle me-2"></i>All ' + totalFiles + ' images processed!';
                     progressText.style.color = '#34A853';
                     
@@ -424,17 +358,12 @@
                 } catch (e) {
                     progressText.textContent = 'Error: Invalid server response';
                     progressText.style.color = '#EA4335';
-                    progressBar.style.background = '#EA4335';
                 }
             } else {
                 let msg = 'Server error';
                 try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
                 progressText.textContent = 'Error: ' + msg;
                 progressText.style.color = '#EA4335';
-                progressBar.style.background = '#EA4335';
-                progressBar.style.backgroundImage = 'none';
-                progressBar.style.animation = 'none';
-                progressBarText.textContent = 'Error';
             }
         });
         
@@ -442,16 +371,12 @@
             clearInterval(timerInterval);
             progressText.textContent = 'Network error — check your connection';
             progressText.style.color = '#EA4335';
-            progressBar.style.background = '#EA4335';
-            progressBar.style.backgroundImage = 'none';
-            progressBarText.textContent = 'Error';
         });
         
         xhr.addEventListener('timeout', function() {
             clearInterval(timerInterval);
             progressText.textContent = 'Request timed out — images may still be processing';
             progressText.style.color = '#EA4335';
-            progressBarText.textContent = 'Timeout';
         });
         
         xhr.open('POST', '{% url "detector:batch_upload" %}');

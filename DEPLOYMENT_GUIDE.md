@@ -44,6 +44,7 @@ Before deploying, you need to:
 ### Step 1: Prepare Your Repository
 
 Make sure all changes are committed and pushed to GitHub:
+
 ```bash
 git add .
 git commit -m "Prepare for deployment"
@@ -154,6 +155,7 @@ Railway will automatically detect your Django app and deploy it!
 ### Step 2: Clone Repository
 
 In PythonAnywhere console:
+
 ```bash
 cd ~
 git clone https://github.com/DMKALALA/AI_image_detector.git
@@ -315,11 +317,13 @@ For production, uploaded images should be stored in cloud storage, not on the se
 ### Option 1: AWS S3 (Recommended)
 
 Install:
+
 ```bash
 pip install django-storages boto3
 ```
 
 Add to `settings.py`:
+
 ```python
 INSTALLED_APPS = [
     # ... existing apps ...
@@ -341,6 +345,7 @@ STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 ### Option 2: Render Disk (Temporary)
 
 For small apps, Render's disk storage works temporarily:
+
 ```python
 # Keep current MEDIA_ROOT setting
 # But be aware: files are lost on redeploy!
@@ -386,6 +391,7 @@ python-3.9.18
 ### 1. Run Migrations
 
 After deployment, always run:
+
 ```bash
 python manage.py migrate
 ```
@@ -412,6 +418,7 @@ python manage.py collectstatic --noinput
 ### 5. Monitor Logs
 
 Check deployment logs for errors:
+
 ```bash
 # Render
 # View in dashboard → Logs
@@ -474,12 +481,12 @@ heroku logs --tail
 
 ## Cost Estimates
 
-| Platform | Free Tier | Paid Tier |
-|----------|-----------|-----------|
-| **Render** | Free (PostgreSQL + Web) | $7/month (starter) |
-| **Railway** | $5 credit/month | Pay-as-you-go |
-| **PythonAnywhere** | Free (limited) | $5/month (hobbyist) |
-| **Heroku** | None | $7/month (Eco) |
+| Platform           | Free Tier               | Paid Tier           |
+| ------------------ | ----------------------- | ------------------- |
+| **Render**         | Free (PostgreSQL + Web) | $7/month (starter)  |
+| **Railway**        | $5 credit/month         | Pay-as-you-go       |
+| **PythonAnywhere** | Free (limited)          | $5/month (hobbyist) |
+| **Heroku**         | None                    | $7/month (Eco)      |
 
 ---
 
@@ -512,4 +519,3 @@ heroku logs --tail
 ---
 
 **Need Help?** Check the platform-specific documentation or review the project's `PROJECT_DOCUMENTATION.md` for more details.
-

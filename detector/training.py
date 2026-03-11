@@ -195,6 +195,10 @@ class AIImageDetector(nn.Module):
         # Use pooled output for classification
         pooled_output = outputs.pooler_output
         
+        # Flatten spatial dimensions (e.g. [batch, 2048, 1, 1] -> [batch, 2048])
+        if pooled_output.dim() > 2:
+            pooled_output = pooled_output.flatten(1)
+        
         # Classification
         logits = self.classifier(pooled_output)
         

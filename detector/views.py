@@ -46,6 +46,7 @@ def home(request):
                     image_upload.detection_indicators = result['indicators']
                     image_upload.analysis_details = result['analysis_details']
                     image_upload.ai_caption = result.get('caption', '')
+                    image_upload.method = result.get('method', 'unknown')
                     image_upload.save()
                     
                     status = "AI-Generated" if result['is_ai_generated'] else "Real/Human-Created"
@@ -236,6 +237,7 @@ def feedback_stats(request):
         'correct_count': correct_count,
         'incorrect_count': incorrect_count,
         'unsure_count': unsure_count,
+        'total_feedback': correct_count + incorrect_count + unsure_count,
         'accuracy': accuracy,
         'feedback_rate': (feedback_images / total_images * 100) if total_images > 0 else 0
     }
@@ -439,10 +441,14 @@ def analytics_dashboard(request):
     
     # Basic statistics
     total_images = ImageUpload.objects.count()
-    processed_images = ImageUpload.objects.exclude(method__iexact='unknown').count()
+    processed_images = ImageUpload.objects.filter(
+        Q(confidence_score__gt=0) | ~Q(method__iexact='unknown')
+    ).count()
     unprocessed_images = total_images - processed_images
-    # Use processed records for most analytics
-    processed_queryset = ImageUpload.objects.exclude(method__iexact='unknown')
+    # Use processed records for most analytics (images that have been analyzed)
+    processed_queryset = ImageUpload.objects.filter(
+        Q(confidence_score__gt=0) | ~Q(method__iexact='unknown')
+    )
     ai_images = processed_queryset.filter(is_ai_generated=True).count()
     real_images = processed_queryset.filter(is_ai_generated=False).count()
     
@@ -547,8 +553,12 @@ def analytics_simple(request):
     
     # Basic statistics
     total_images = ImageUpload.objects.count()
-    processed_images = ImageUpload.objects.exclude(method__iexact='unknown').count()
-    processed_queryset = ImageUpload.objects.exclude(method__iexact='unknown')
+    processed_images = ImageUpload.objects.filter(
+        Q(confidence_score__gt=0) | ~Q(method__iexact='unknown')
+    ).count()
+    processed_queryset = ImageUpload.objects.filter(
+        Q(confidence_score__gt=0) | ~Q(method__iexact='unknown')
+    )
     ai_images = processed_queryset.filter(is_ai_generated=True).count()
     real_images = processed_queryset.filter(is_ai_generated=False).count()
     

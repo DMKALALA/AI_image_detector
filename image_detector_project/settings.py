@@ -119,7 +119,7 @@ if 'DATABASE_URL' in os.environ:
         DATABASES = {
             "default": {
                 "ENGINE": "django.db.backends.sqlite3",
-                "NAME": BASE_DIR / "db.sqlite3",
+                "NAME": BASE_DIR / "data" / "db.sqlite3",
             }
         }
 else:
@@ -127,7 +127,7 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+            "NAME": BASE_DIR / "data" / "db.sqlite3",
         }
     }
 
@@ -174,8 +174,13 @@ STATICFILES_DIRS = [
 ]
 
 # Media files (uploaded images)
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/uploads/"
+MEDIA_ROOT = BASE_DIR / "uploads"
+
+# Upload memory limits - prevent large uploads from consuming too much RAM
+# Files larger than 2.5MB are streamed to disk (default)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB max request body
 
 # Use WhiteNoise for static file serving in production (if available)
 if not DEBUG and WHITENOISE_AVAILABLE:

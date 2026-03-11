@@ -24,6 +24,7 @@ Each method provides independent results for direct comparison.
 """
 
 import os
+import gc
 import json
 import numpy as np
 from PIL import Image, ExifTags
@@ -215,9 +216,13 @@ class ThreeMethodDetectionService:
                 logger.warning(f"Could not initialize forensics fallback: {e}")
                 self.improved_method_3 = None
         
+        # Check if memory-constrained - skip heavy models on low-RAM systems
+        memory_constrained = os.environ.get('MEMORY_CONSTRAINED', 'true').lower() == 'true'
+        
         # Method 4: Hugging Face specialized models ensemble (NEW)
+        # Each HF model is ~700MB-1GB in RAM - skip when memory-constrained
         self.huggingface_ensemble = None
-        if HUGGINGFACE_AVAILABLE:
+        if HUGGINGFACE_AVAILABLE and not memory_constrained:
             try:
                 logger.info("Attempting to initialize Hugging Face model ensemble...")
                 self.huggingface_ensemble = HuggingFaceEnsemble(device=self.device)
@@ -229,10 +234,13 @@ class ThreeMethodDetectionService:
             except Exception as e:
                 logger.error(f"Could not initialize Hugging Face ensemble: {e}", exc_info=True)
                 self.huggingface_ensemble = None
+        elif memory_constrained and HUGGINGFACE_AVAILABLE:
+            logger.info("⚠ Skipping Hugging Face models (MEMORY_CONSTRAINED=true, each model ~700MB-1GB)")
         
         # Method 5: Enterprise models ensemble (Hive, Reality Defender, Sensity, CLIP) - OPTIONAL
+        # Also very memory-heavy - skip when memory-constrained
         self.enterprise_ensemble = None
-        if ENTERPRISE_MODELS_AVAILABLE:
+        if ENTERPRISE_MODELS_AVAILABLE and not memory_constrained:
             try:
                 logger.info("Attempting to initialize Enterprise model ensemble...")
                 self.enterprise_ensemble = EnterpriseModelsEnsemble(device=self.device)
@@ -244,6 +252,8 @@ class ThreeMethodDetectionService:
             except Exception as e:
                 logger.error(f"Could not initialize Enterprise ensemble: {e}", exc_info=True)
                 self.enterprise_ensemble = None
+        elif memory_constrained and ENTERPRISE_MODELS_AVAILABLE:
+            logger.info("⚠ Skipping Enterprise models (MEMORY_CONSTRAINED=true)")
         
         # Method names
         self.methods = {
@@ -601,9 +611,16 @@ class ThreeMethodDetectionService:
                 except Exception as e:
                     logger.warning(f"Feedback learning adjustment failed: {e}")
             
+            # Free memory after inference - critical on low-RAM systems
+            del image
+            gc.collect()
+            if TORCH_AVAILABLE:
+                torch.cuda.empty_cache() if torch.cuda.is_available() else None
+            
             return final_result
             
         except Exception as e:
+            gc.collect()
             logger.error(f"Error in three-method detection: {e}")
             return self._error_result(f"Detection failed: {str(e)}")
     

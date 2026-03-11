@@ -318,6 +318,7 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <h6>Key Indicators:</h6>
+                                                <p class="text-muted mb-2" style="font-size: 0.8rem;">A neural network trained on thousands of AI and real images recognises visual patterns that distinguish them.</p>
                                                 <ul class="list-unstyled mb-0">
                                                     {% for indicator in comparison.method_1.indicators|slice:":3" %}
                                                     <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
@@ -366,6 +367,7 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <h6>Key Indicators:</h6>
+                                                <p class="text-muted mb-2" style="font-size: 0.8rem;">Measures pixel-level statistics like edge sharpness, colour spread, and texture uniformity — AI images often have unusually smooth or repetitive patterns.</p>
                                                 <ul class="list-unstyled mb-0">
                                                     {% for indicator in comparison.method_2.indicators|slice:":3" %}
                                                     <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
@@ -409,6 +411,7 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <h6>Key Indicators:</h6>
+                                                <p class="text-muted mb-2" style="font-size: 0.8rem;">Examines file metadata, frequency spectrum, and compression artefacts for traces left by AI generation tools.</p>
                                                 <ul class="list-unstyled mb-0">
                                                     {% for indicator in comparison.method_3.indicators|slice:":3" %}
                                                     <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
@@ -453,6 +456,7 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <h6>Key Indicators:</h6>
+                                                <p class="text-muted mb-2" style="font-size: 0.8rem;">Specialised Vision Transformer models fine-tuned on large AI-image datasets to spot generation signatures invisible to the human eye.</p>
                                                 <ul class="list-unstyled mb-0">
                                                     {% for indicator in comparison.method_4.indicators|slice:":5" %}
                                                     <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
@@ -498,6 +502,7 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <h6>Key Indicators:</h6>
+                                                <p class="text-muted mb-2" style="font-size: 0.8rem;">Enterprise-grade ensemble combining CNN, transformer, and CLIP-based detectors for robust cross-validation.</p>
                                                 <ul class="list-unstyled mb-0">
                                                     {% for indicator in comparison.method_5.indicators|slice:":5" %}
                                                     <li><i class="fas fa-check-circle text-muted"></i> <small>{{ indicator }}</small></li>
@@ -646,7 +651,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const chartDom = document.getElementById('confidenceGauge');
         if (chartDom) {
-            const myChart = echarts.init(chartDom);
+            const myChart = echarts.init(chartDom, window.echartsTheme);
             const confidenceValue = {{ image_upload.confidence_score|mul:100|floatformat:1 }};
             const isAI = {{ image_upload.is_ai_generated|yesno:"true,false" }};
             

@@ -17,6 +17,29 @@
             </div>
         </div>
         
+        <!-- Theme Selector -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body py-2">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap">
+                            <div class="mb-2 mb-md-0">
+                                <small><i class="fas fa-palette"></i> Chart Theme:</small>
+                            </div>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary theme-btn active" data-theme="default">Default</button>
+                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="vintage">Vintage</button>
+                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="dark">Dark</button>
+                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="macarons">Macarons</button>
+                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="infographic">Infographic</button>
+                                <button type="button" class="btn btn-outline-primary theme-btn" data-theme="shine">Shine</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- System Status -->
         <div class="row mb-4">
             <div class="col-md-4">
@@ -71,7 +94,7 @@
         <!-- Overview Cards -->
         <div class="row mb-4">
             <div class="col-md-3">
-                <div class="card bg-primary text-white">
+                <div class="card bg-primary text-white theme-card" data-default-bg="bg-primary" data-theme-idx="2">
                     <div class="card-body text-center">
                         <h3>{{ total_images }}</h3>
                         <p class="mb-0">Total Images</p>
@@ -79,7 +102,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-success text-white">
+                <div class="card bg-success text-white theme-card" data-default-bg="bg-success" data-theme-idx="0">
                     <div class="card-body text-center">
                         <h3>{{ real_images }}</h3>
                         <p class="mb-0">Real Images</p>
@@ -87,7 +110,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-danger text-white">
+                <div class="card bg-danger text-white theme-card" data-default-bg="bg-danger" data-theme-idx="1">
                     <div class="card-body text-center">
                         <h3>{{ ai_images }}</h3>
                         <p class="mb-0">AI Images</p>
@@ -95,7 +118,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-warning text-white">
+                <div class="card bg-warning text-white theme-card" data-default-bg="bg-warning" data-theme-idx="3">
                     <div class="card-body text-center">
                         <h3>{{ accuracy|floatformat:1 }}%</h3>
                         <p class="mb-0">Detection Accuracy</p>
@@ -113,7 +136,7 @@
                         <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Detection Distribution</h5>
                     </div>
                     <div class="card-body">
-                        <div id="detectionChart" style="width: 100%; height: 300px;"></div>
+                        <div id="detectionChart" style="width: 100%; height: 400px;"></div>
                     </div>
                 </div>
             </div>
@@ -125,7 +148,7 @@
                         <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Confidence Distribution</h5>
                     </div>
                     <div class="card-body">
-                        <div id="confidenceChart" style="width: 100%; height: 300px;"></div>
+                        <div id="confidenceChart" style="width: 100%; height: 400px;"></div>
                     </div>
                 </div>
             </div>
@@ -140,7 +163,7 @@
                         <h5 class="mb-0"><i class="fas fa-thumbs-up"></i> User Feedback</h5>
                     </div>
                     <div class="card-body">
-                        <div id="feedbackChart" style="width: 100%; height: 250px;"></div>
+                        <div id="feedbackChart" style="width: 100%; height: 350px;"></div>
                         <div class="mt-2 text-center">
                             <small class="text-muted">Feedback Rate: {{ feedback_rate|floatformat:1 }}%</small>
                         </div>
@@ -166,39 +189,7 @@
                             </div>
                         </div>
                         <div class="mt-3">
-                            <div id="activityChart" style="width: 100%; height: 200px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Method Statistics -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-cogs"></i> Detection Methods</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            {% for method in method_stats %}
-                            <div class="col-md-3 mb-2">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>{{ method.method|title }}</h6>
-                                        <h4 class="text-primary">{{ method.count }}</h4>
-                                        <small>
-                                            {% if processed_images %}
-                                                {% widthratio method.count processed_images 100 %}%
-                                            {% else %}
-                                                N/A
-                                            {% endif %}
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
+                            <div id="activityChart" style="width: 100%; height: 300px;"></div>
                         </div>
                     </div>
                 </div>
@@ -242,7 +233,7 @@
                         
                         <!-- Confidence Ranges Chart -->
                         <div class="mt-4">
-                            <div id="confidenceRangesChart" style="width: 100%; height: 300px;"></div>
+                            <div id="confidenceRangesChart" style="width: 100%; height: 400px;"></div>
                         </div>
                     </div>
                 </div>
@@ -253,14 +244,99 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <script type="text/javascript">
-    // Initialize all charts when DOM is ready
+    // Chart instance references
+    var chartInstances = {};
+
+    // Default color palettes (only used when no theme is active)
+    var defaultColors = {
+        detection: { real: '#34A853', ai: '#EA4335' },
+        confidence: [
+            ['#34A853', '#2d8f47'],  // high
+            ['#FBBC04', '#e0a800'],  // medium
+            ['#EA4335', '#d33b2e']   // low
+        ],
+        activity: { line: '#4285F4', areaTop: 'rgba(66, 133, 244, 0.3)', areaBottom: 'rgba(66, 133, 244, 0.05)' },
+        ranges: ['#EA4335', '#FF6F00', '#FBBC04', '#00897B', '#34A853'],
+        feedback: [
+            ['#34A853', '#2d8f47'],  // correct
+            ['#EA4335', '#d33b2e'],  // incorrect
+            ['#FBBC04', '#e0a800']   // unsure
+        ]
+    };
+    var useDefaults = !window.echartsTheme;
+
+    // Theme color palettes for overview cards (first 4 colors from each ECharts theme)
+    var themeCardColors = {
+        vintage:     ['#d87c7c', '#919e8b', '#d7ab82', '#6e7074'],
+        dark:        ['#dd6b66', '#759aa0', '#e69d87', '#8dc1a9'],
+        macarons:    ['#2ec7c9', '#b6a2de', '#5ab1ef', '#ffb980'],
+        infographic: ['#C1232B', '#27727B', '#FCCE10', '#E87C25'],
+        shine:       ['#c12e34', '#e6b600', '#0098d9', '#2b821d']
+    };
+
+    function getLuminance(hex) {
+        hex = hex.replace('#', '');
+        var r = parseInt(hex.substring(0, 2), 16) / 255;
+        var g = parseInt(hex.substring(2, 4), 16) / 255;
+        var b = parseInt(hex.substring(4, 6), 16) / 255;
+        r = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+        g = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+        b = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    function applyCardTheme() {
+        var cards = document.querySelectorAll('.theme-card');
+        var themeName = window.echartsTheme;
+        var palette = themeCardColors[themeName];
+        cards.forEach(function(card) {
+            var defaultBg = card.getAttribute('data-default-bg');
+            var idx = parseInt(card.getAttribute('data-theme-idx'), 10);
+            if (!themeName || !palette) {
+                // Restore default Bootstrap classes
+                card.style.backgroundColor = '';
+                card.style.borderColor = '';
+                if (!card.classList.contains(defaultBg)) card.classList.add(defaultBg);
+                card.classList.remove('text-dark');
+                if (!card.classList.contains('text-white')) card.classList.add('text-white');
+            } else {
+                // Remove Bootstrap bg class, apply theme color using semantic index
+                card.classList.remove(defaultBg);
+                var color = palette[idx % palette.length];
+                card.style.backgroundColor = color;
+                card.style.borderColor = color;
+                // Set text color based on luminance
+                var lum = getLuminance(color);
+                if (lum > 0.35) {
+                    card.classList.remove('text-white');
+                    card.classList.add('text-dark');
+                } else {
+                    card.classList.remove('text-dark');
+                    card.classList.add('text-white');
+                }
+            }
+        });
+    }
+
+    function disposeChart(key) {
+        if (chartInstances[key]) {
+            chartInstances[key].dispose();
+            chartInstances[key] = null;
+        }
+    }
+
+    // Initialize all charts when DOM is ready + theme loaded
     document.addEventListener('DOMContentLoaded', function() {
-        drawCharts();
+        window.waitForTheme(window.echartsTheme, function() {
+            drawCharts();
+        });
+        window.initGlobalThemeSwitcher(drawCharts);
     });
 
     function drawCharts() {
+        useDefaults = !window.echartsTheme;
+        applyCardTheme();
         drawDetectionChart();
         drawConfidenceChart();
         drawActivityChart();
@@ -271,7 +347,8 @@
     // Detection Distribution Donut Chart
     function drawDetectionChart() {
         const chartDom = document.getElementById('detectionChart');
-        const myChart = echarts.init(chartDom);
+        disposeChart('detection');
+        const myChart = echarts.init(chartDom, window.echartsTheme);
         
         const option = {
             tooltip: {
@@ -313,18 +390,17 @@
                     labelLine: {
                         show: true
                     },
-                    data: [
-                        { 
-                            value: {{ real_images }}, 
-                            name: 'Real Images',
-                            itemStyle: { color: '#34A853' }
-                        },
-                        { 
-                            value: {{ ai_images }}, 
-                            name: 'AI Images',
-                            itemStyle: { color: '#EA4335' }
+                    data: (function() {
+                        var d = [
+                            { value: {{ real_images }}, name: 'Real Images' },
+                            { value: {{ ai_images }}, name: 'AI Images' }
+                        ];
+                        if (useDefaults) {
+                            d[0].itemStyle = { color: defaultColors.detection.real };
+                            d[1].itemStyle = { color: defaultColors.detection.ai };
                         }
-                    ],
+                        return d;
+                    })(),
                     animationType: 'scale',
                     animationEasing: 'elasticOut',
                     animationDelay: function (idx) {
@@ -335,13 +411,14 @@
         };
         
         myChart.setOption(option);
-        window.detectionChart = myChart;
+        chartInstances.detection = myChart;
     }
 
     // Confidence Distribution Bar Chart
     function drawConfidenceChart() {
         const chartDom = document.getElementById('confidenceChart');
-        const myChart = echarts.init(chartDom);
+        disposeChart('confidence');
+        const myChart = echarts.init(chartDom, window.echartsTheme);
         
         const option = {
             tooltip: {
@@ -351,56 +428,46 @@
                 }
             },
             grid: {
-                left: '3%',
-                right: '4%',
-                bottom: '3%',
-                containLabel: true
+                left: '15%',
+                right: '6%',
+                bottom: '13%',
+                top: '8%',
+                containLabel: false
             },
             xAxis: {
                 type: 'category',
                 data: ['High\n(≥80%)', 'Medium\n(50-80%)', 'Low\n(<50%)'],
+                name: 'Confidence Level',
+                nameLocation: 'middle',
+                nameGap: 35,
+                nameTextStyle: {
+                    fontSize: 13,
+                    fontWeight: 'bold'
+                },
                 axisTick: {
                     alignWithLabel: true
                 },
                 axisLabel: {
                     interval: 0,
                     rotate: 0,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: '#333',
+                    fontSize: 12,
+                    fontWeight: 'normal',
                     margin: 12
-                },
-                axisLine: {
-                    lineStyle: {
-                        color: '#ddd'
-                    }
                 }
             },
             yAxis: {
                 type: 'value',
                 name: 'Number of Images',
                 nameLocation: 'middle',
-                nameGap: 50,
+                nameGap: 45,
                 nameTextStyle: {
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#333'
+                    fontSize: 13,
+                    fontWeight: 'bold'
                 },
                 minInterval: 1,
                 axisLabel: {
                     fontSize: 12,
-                    color: '#666'
-                },
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#ddd'
-                    }
-                },
-                splitLine: {
-                    lineStyle: {
-                        color: '#f0f0f0'
-                    }
+                    fontWeight: 'normal'
                 }
             },
             series: [
@@ -408,35 +475,21 @@
                     name: 'Images',
                     type: 'bar',
                     barWidth: '60%',
-                    data: [
-                        {
-                            value: {{ high_confidence }},
-                            itemStyle: { 
-                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                    { offset: 0, color: '#34A853' },
-                                    { offset: 1, color: '#2d8f47' }
-                                ])
+                    data: (function() {
+                        var vals = [{{ high_confidence }}, {{ medium_confidence }}, {{ low_confidence }}];
+                        return vals.map(function(v, i) {
+                            var item = { value: v };
+                            if (useDefaults) {
+                                item.itemStyle = {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                        { offset: 0, color: defaultColors.confidence[i][0] },
+                                        { offset: 1, color: defaultColors.confidence[i][1] }
+                                    ])
+                                };
                             }
-                        },
-                        {
-                            value: {{ medium_confidence }},
-                            itemStyle: { 
-                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                    { offset: 0, color: '#FBBC04' },
-                                    { offset: 1, color: '#e0a800' }
-                                ])
-                            }
-                        },
-                        {
-                            value: {{ low_confidence }},
-                            itemStyle: { 
-                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                    { offset: 0, color: '#EA4335' },
-                                    { offset: 1, color: '#d33b2e' }
-                                ])
-                            }
-                        }
-                    ],
+                            return item;
+                        });
+                    })(),
                     label: {
                         show: true,
                         position: 'top'
@@ -453,17 +506,21 @@
         };
         
         myChart.setOption(option);
-        window.confidenceChart = myChart;
+        chartInstances.confidence = myChart;
     }
 
     // Activity Line Chart
     function drawActivityChart() {
         const chartDom = document.getElementById('activityChart');
-        const myChart = echarts.init(chartDom);
+        disposeChart('activity');
+        const myChart = echarts.init(chartDom, window.echartsTheme);
         const dailyData = {{ daily_uploads|safe }};
         
         // Prepare data
-        const dates = dailyData.reverse().map(d => d.date);
+        const dates = dailyData.reverse().map(d => {
+            const parts = d.date.split('-');
+            return parts[1] + '/' + parts[2] + '/' + parts[0];
+        });
         const counts = dailyData.map(d => d.count);
         
         const option = {
@@ -472,10 +529,11 @@
                 formatter: '{b}<br/>Uploads: {c}'
             },
             grid: {
-                left: '3%',
-                right: '4%',
+                left: '15%',
+                right: '6%',
                 bottom: '15%',
-                containLabel: true
+                top: '8%',
+                containLabel: false
             },
             xAxis: {
                 type: 'category',
@@ -483,50 +541,33 @@
                 data: dates,
                 name: 'Date',
                 nameLocation: 'middle',
-                nameGap: 45,
+                nameGap: 25,
                 nameTextStyle: {
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#333'
+                    fontSize: 13,
+                    fontWeight: 'bold'
                 },
                 axisLabel: {
                     rotate: 45,
                     interval: 0,
-                    fontSize: 11,
-                    color: '#666',
+                    fontSize: 7,
+                    fontWeight: 'normal',
                     margin: 10
-                },
-                axisLine: {
-                    lineStyle: {
-                        color: '#ddd'
-                    }
                 }
             },
             yAxis: {
                 type: 'value',
                 name: 'Number of Uploads',
                 nameLocation: 'middle',
-                nameGap: 50,
+                nameGap: 30,
                 nameTextStyle: {
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#333'
+                    fontSize: 13,
+                    fontWeight: 'bold'
                 },
                 minInterval: 1,
                 axisLabel: {
                     fontSize: 12,
-                    color: '#666'
-                },
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#ddd'
-                    }
-                },
-                splitLine: {
-                    lineStyle: {
-                        color: '#f0f0f0'
-                    }
+                    fontWeight: 'normal',
+                    margin: 8
                 }
             },
             series: [
@@ -536,21 +577,14 @@
                     smooth: true,
                     symbol: 'circle',
                     symbolSize: 8,
-                    lineStyle: {
-                        width: 3,
-                        color: '#4285F4'
-                    },
-                    itemStyle: {
-                        color: '#4285F4',
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    },
-                    areaStyle: {
+                    lineStyle: useDefaults ? { width: 3, color: defaultColors.activity.line } : { width: 3 },
+                    itemStyle: useDefaults ? { color: defaultColors.activity.line, borderWidth: 2, borderColor: '#fff' } : { borderWidth: 2 },
+                    areaStyle: useDefaults ? {
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: 'rgba(66, 133, 244, 0.3)' },
-                            { offset: 1, color: 'rgba(66, 133, 244, 0.05)' }
+                            { offset: 0, color: defaultColors.activity.areaTop },
+                            { offset: 1, color: defaultColors.activity.areaBottom }
                         ])
-                    },
+                    } : {},
                     data: counts,
                     animationDelay: function (idx) {
                         return idx * 20;
@@ -561,16 +595,15 @@
         };
         
         myChart.setOption(option);
-        window.activityChart = myChart;
+        chartInstances.activity = myChart;
     }
 
     // Confidence Ranges Bar Chart
     function drawConfidenceRangesChart() {
         const chartDom = document.getElementById('confidenceRangesChart');
-        const myChart = echarts.init(chartDom);
+        disposeChart('ranges');
+        const myChart = echarts.init(chartDom, window.echartsTheme);
         const rangesData = {{ confidence_ranges|safe }};
-        
-        const colors = ['#EA4335', '#FF6F00', '#FBBC04', '#00897B', '#34A853'];
         
         const option = {
             tooltip: {
@@ -580,62 +613,45 @@
                 }
             },
             grid: {
-                left: '3%',
-                right: '4%',
-                bottom: '3%',
-                containLabel: true
+                left: '15%',
+                right: '6%',
+                bottom: '13%',
+                top: '8%',
+                containLabel: false
             },
             xAxis: {
                 type: 'category',
                 data: rangesData.map(r => r.range),
                 name: 'Confidence Range',
                 nameLocation: 'middle',
-                nameGap: 40,
+                nameGap: 32,
                 nameTextStyle: {
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#333'
+                    fontSize: 13,
+                    fontWeight: 'bold'
                 },
                 axisTick: {
                     alignWithLabel: true
                 },
                 axisLabel: {
                     fontSize: 12,
-                    color: '#666',
+                    fontWeight: 'normal',
                     interval: 0,
                     rotate: 20
-                },
-                axisLine: {
-                    lineStyle: {
-                        color: '#ddd'
-                    }
                 }
             },
             yAxis: {
                 type: 'value',
                 name: 'Number of Images',
                 nameLocation: 'middle',
-                nameGap: 50,
+                nameGap: 45,
                 nameTextStyle: {
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#333'
+                    fontSize: 13,
+                    fontWeight: 'bold'
                 },
                 minInterval: 1,
                 axisLabel: {
                     fontSize: 12,
-                    color: '#666'
-                },
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#ddd'
-                    }
-                },
-                splitLine: {
-                    lineStyle: {
-                        color: '#f0f0f0'
-                    }
+                    fontWeight: 'normal'
                 }
             },
             series: [
@@ -643,16 +659,21 @@
                     name: 'Images',
                     type: 'bar',
                     barWidth: '60%',
-                    data: rangesData.map((r, i) => ({
-                        value: r.count,
-                        itemStyle: {
-                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                { offset: 0, color: colors[i] },
-                                { offset: 1, color: colors[i] + 'cc' }
-                            ]),
-                            borderRadius: [5, 5, 0, 0]
+                    data: rangesData.map(function(r, i) {
+                        var item = { value: r.count };
+                        if (useDefaults) {
+                            item.itemStyle = {
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: defaultColors.ranges[i] },
+                                    { offset: 1, color: defaultColors.ranges[i] + 'cc' }
+                                ]),
+                                borderRadius: [5, 5, 0, 0]
+                            };
+                        } else {
+                            item.itemStyle = { borderRadius: [5, 5, 0, 0] };
                         }
-                    })),
+                        return item;
+                    }),
                     label: {
                         show: true,
                         position: 'top',
@@ -667,13 +688,14 @@
         };
         
         myChart.setOption(option);
-        window.confidenceRangesChart = myChart;
+        chartInstances.ranges = myChart;
     }
 
     // Feedback Bar Chart with Stacked Display
     function drawFeedbackChart() {
         const chartDom = document.getElementById('feedbackChart');
-        const myChart = echarts.init(chartDom);
+        disposeChart('feedback');
+        const myChart = echarts.init(chartDom, window.echartsTheme);
         
         const correctCount = {{ correct_feedback }};
         const incorrectCount = {{ incorrect_feedback }};
@@ -700,11 +722,11 @@
                 bottom: 0
             },
             grid: {
-                left: '3%',
-                right: '4%',
-                bottom: '15%',
+                left: '15%',
+                right: '6%',
+                bottom: '8%',
                 top: '10%',
-                containLabel: true
+                containLabel: false
             },
             xAxis: {
                 type: 'category',
@@ -715,93 +737,51 @@
                 type: 'value',
                 name: 'Number of Responses',
                 nameLocation: 'middle',
-                nameGap: 50,
+                nameGap: 45,
                 nameTextStyle: {
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#333'
+                    fontSize: 13,
+                    fontWeight: 'bold'
                 },
                 axisLabel: {
                     fontSize: 12,
-                    color: '#666'
-                },
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#ddd'
-                    }
-                },
-                splitLine: {
-                    lineStyle: {
-                        color: '#f0f0f0'
-                    }
+                    fontWeight: 'normal'
                 }
             },
-            series: [
-                {
-                    name: 'Correct',
-                    type: 'bar',
-                    stack: 'total',
-                    label: {
-                        show: true,
-                        formatter: '{c}'
-                    },
-                    itemStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: '#34A853' },
-                            { offset: 1, color: '#2d8f47' }
-                        ])
-                    },
-                    data: [correctCount],
-                    barWidth: '50%'
-                },
-                {
-                    name: 'Incorrect',
-                    type: 'bar',
-                    stack: 'total',
-                    label: {
-                        show: true,
-                        formatter: '{c}'
-                    },
-                    itemStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: '#EA4335' },
-                            { offset: 1, color: '#d33b2e' }
-                        ])
-                    },
-                    data: [incorrectCount]
-                },
-                {
-                    name: 'Unsure',
-                    type: 'bar',
-                    stack: 'total',
-                    label: {
-                        show: true,
-                        formatter: '{c}'
-                    },
-                    itemStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: '#FBBC04' },
-                            { offset: 1, color: '#e0a800' }
-                        ])
-                    },
-                    data: [unsureCount]
-                }
-            ],
+            series: (function() {
+                var names = ['Correct', 'Incorrect', 'Unsure'];
+                var values = [correctCount, incorrectCount, unsureCount];
+                return names.map(function(name, i) {
+                    var s = {
+                        name: name,
+                        type: 'bar',
+                        stack: 'total',
+                        label: { show: true, formatter: '{c}' },
+                        data: [values[i]]
+                    };
+                    if (i === 0) s.barWidth = '50%';
+                    if (useDefaults) {
+                        s.itemStyle = {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: defaultColors.feedback[i][0] },
+                                { offset: 1, color: defaultColors.feedback[i][1] }
+                            ])
+                        };
+                    }
+                    return s;
+                });
+            })(),
             animationEasing: 'elasticOut'
         };
         
         myChart.setOption(option);
-        window.feedbackChart = myChart;
+        chartInstances.feedback = myChart;
     }
 
     // Make charts responsive
     window.addEventListener('resize', function() {
-        if (window.detectionChart) window.detectionChart.resize();
-        if (window.confidenceChart) window.confidenceChart.resize();
-        if (window.activityChart) window.activityChart.resize();
-        if (window.confidenceRangesChart) window.confidenceRangesChart.resize();
-        if (window.feedbackChart) window.feedbackChart.resize();
+        Object.keys(chartInstances).forEach(function(k) {
+            if (chartInstances[k]) chartInstances[k].resize();
+        });
     });
 </script>
 {% endblock %}
