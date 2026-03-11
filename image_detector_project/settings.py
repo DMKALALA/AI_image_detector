@@ -32,11 +32,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
-    # Fail fast with a clear error instead of silently using an insecure key
-    raise RuntimeError("SECRET_KEY environment variable is required")
+    # In development (no .env file), generate a random key automatically.
+    # In production, always set SECRET_KEY as an environment variable.
+    import secrets
+    SECRET_KEY = secrets.token_urlsafe(50)
+    _DEV_MODE = True
+else:
+    _DEV_MODE = False
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+# Defaults to True for development so the app works on a fresh clone.
+# Set DEBUG=False in your .env or environment for production.
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 

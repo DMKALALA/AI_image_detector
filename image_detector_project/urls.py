@@ -25,6 +25,7 @@ urlpatterns = [
     path("", include("detector.urls")),
 ]
 
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve media files (uploaded images)
+# In production with a reverse proxy (nginx/apache), the proxy should serve these directly.
+# This ensures media files work during development and simple deployments.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
